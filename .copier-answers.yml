@@ -1,0 +1,8 @@
+description: Solving constrained linear least squares
+gh_create: gh repo create tschm/proximal --private --description 'Solving constrained
+  linear least squares'
+project_name: proximal
+repository: https://github.com/tschm/proximal
+ssh_uri: git@github.com:tschm/proximal.git
+status: private
+username: tschm
