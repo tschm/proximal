@@ -22,7 +22,8 @@
         "labels": [
           "pre-commit",
           "dependencies"
-        ]
+        ],
+        "matchDepTypes": ["repository"]
       }
     ]
   },
