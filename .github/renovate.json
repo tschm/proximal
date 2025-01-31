@@ -12,7 +12,7 @@
   },
   "pre-commit": {
     "enabled": true,
-    "schedule": ["every friday", "before 3pmsc"]
+    "schedule": ["every friday", "before 3pm"]
   },
   "labels": ["renovate"],
   "packageRules": [
