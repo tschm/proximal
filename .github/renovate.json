@@ -14,15 +14,12 @@
   "pre-commit": {
     "enabled": true,
     "schedule": [
-      "on friday",
+      "monthly on the first monday before 6am",
       "before 3pm"
     ],
     "packageRules": [
       {
         "groupName": "pre-commit hooks",
-        "matchDepTypes": [
-          "repository"
-        ],
         "groupSlug": "pre-commit",
         "labels": [
           "pre-commit",
