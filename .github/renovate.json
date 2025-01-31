@@ -4,11 +4,9 @@
     "config:recommended"
   ],
   "automerge": true,
-  "ignorePaths": [
-    "**/.python-version"
-  ],
   "lockFileMaintenance": {
-    "enabled": true
+    "enabled": true,
+    "schedule": ["every friday", "before 3pm"]
   },
   "pre-commit": {
     "enabled": true,
