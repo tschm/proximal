@@ -7,15 +7,13 @@
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": [
-      "on friday",
-      "before 3pm"
+      "on friday before 3pm"
     ]
   },
   "pre-commit": {
     "enabled": true,
     "schedule": [
-      "monthly on the first monday before 6am",
-      "before 3pm"
+      "monthly on the first monday before 6am"
     ],
     "packageRules": [
       {
