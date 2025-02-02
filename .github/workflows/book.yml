@@ -13,20 +13,14 @@ jobs:
   marimo:
     runs-on: "ubuntu-latest"
     steps:
-      - name: Checkout [${{ github.repository }}]
-        uses: actions/checkout@v4
-
-      - uses: cvxgrp/.github/actions/uv/marimo@v2.0.13
+      - uses: cvxgrp/.github/actions/uv/marimo@v2.0.17
         with:
           source_folder: book/marimo
 
   pdoc:
     runs-on: "ubuntu-latest"
     steps:
-      - name: Checkout [${{ github.repository }}]
-        uses: actions/checkout@v4
-
-      - uses: cvxgrp/.github/actions/uv/pdoc@v2.0.13
+      - uses: cvxgrp/.github/actions/uv/pdoc@v2.0.17
         with:
           source-folder: src/proximal
 
@@ -34,13 +28,11 @@ jobs:
   test:
     runs-on: "ubuntu-latest"
     steps:
-      - name: Checkout [${{ github.repository }}]
-        uses: actions/checkout@v4
-
-      - uses: cvxgrp/.github/actions/uv/coverage@v2.0.13
+      - uses: cvxgrp/.github/actions/uv/coverage@v2.0.17
         with:
           tests-folder: src/tests
           source-folder: src/proximal
+          coveralls: 'false'
 
   jupyter:
     runs-on: "ubuntu-latest"
