@@ -19,6 +19,8 @@ jobs:
         uses: cvxgrp/.github/actions/uv/environment@v2.1.0
 
       - uses: cvxgrp/.github/actions/pdoc@v2.1.0
+        with:
+          source-folder: 'src/proximal'
 
   test:
     runs-on: "ubuntu-latest"
