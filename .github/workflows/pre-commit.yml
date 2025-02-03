@@ -16,7 +16,7 @@ jobs:
 
       - uses: cvxgrp/.github/actions/deptry@v2.1.0
         with:
-          source-folder: 'src/mosek_license'
+          source-folder: 'src/proximal'
 
   pre-commit:
     runs-on: ubuntu-latest
