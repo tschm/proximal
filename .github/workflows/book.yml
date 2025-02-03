@@ -32,6 +32,7 @@ jobs:
         with:
           source-folder: 'src/proximal'
           tests-folder: 'src/tests'
+          coveralls: 'false'
 
   jupyter:
     runs-on: "ubuntu-latest"
