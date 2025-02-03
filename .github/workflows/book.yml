@@ -27,6 +27,9 @@ jobs:
         uses: cvxgrp/.github/actions/uv/environment@v2.1.0
 
       - uses: cvxgrp/.github/actions/coverage@v2.1.0
+        with:
+          source-folder: 'src/proximal'
+          tests-folder: 'src/tests'
 
   jupyter:
     runs-on: "ubuntu-latest"
