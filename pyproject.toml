@@ -7,7 +7,7 @@ authors = [{name='tschm', email= 'tschm@mailinator.com'}]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "numpy==2.2.4",
+    "numpy>=2.0.0",
 ]
 
 [project.urls]
@@ -16,7 +16,7 @@ repository = "https://github.com/tschm/proximal"
 [project.optional-dependencies]
 dev = [
     "pre-commit==4.2.0",
-    "pytest==8.3.5",
+    "pytest==8.3.4",
     "pytest-cov==6.0.0",
 ]
 
