@@ -17,7 +17,7 @@ repository = "https://github.com/tschm/proximal"
 dev = [
     "pre-commit==4.2.0",
     "pytest==8.3.5",
-    "pytest-cov==6.1.0",
+    "pytest-cov==6.1.1",
 ]
 
 [tool.ruff]
