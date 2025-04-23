@@ -5,6 +5,7 @@
 [![CI](https://github.com/tschm/proximal/actions/workflows/ci.yml/badge.svg)](https://github.com/tschm/proximal/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/tschm/proximal/badge.svg?branch=main)](https://coveralls.io/github/tschm/proximal?branch=main)
 [![Created with Cradle](https://img.shields.io/badge/Created%20with-Cradle-blue?style=flat-square)](https://github.com/tschm/package)
+[![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/renovatebot/renovate)
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/tschm/proximal)
 
