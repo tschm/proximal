@@ -52,4 +52,4 @@ jobs:
       contents: write
 
     steps:
-      - uses: tschm/cradle/actions/book@v0.1.69
+      - uses: tschm/cradle/actions/book@experiment1
