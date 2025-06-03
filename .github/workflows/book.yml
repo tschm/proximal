@@ -54,4 +54,4 @@ jobs:
       id-token: write
 
     steps:
-      - uses: tschm/cradle/actions/book@experiment1
+      - uses: tschm/cradle/actions/book@v0.1.71
