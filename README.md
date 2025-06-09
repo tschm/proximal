@@ -8,6 +8,62 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/tschm/proximal)
 
+## Overview
+
+Proximal is a Python library for solving constrained linear least squares
+problems of the form:
+
+```text
+minimize 0.5 ||mat @ x - vec||^2
+subject to x >= 0, sum(x) = 1
+```
+
+This type of optimization problem appears in many applications including
+
+- Portfolio optimization
+- Signal processing
+- Machine learning
+- Statistics
+
+The library implements an efficient proximal gradient descent algorithm
+that projects onto the probability simplex.
+
+## Features
+
+- Fast implementation of projection onto the probability simplex
+- Proximal gradient descent solver with configurable convergence criteria
+- Pure NumPy implementation for high performance
+- Simple API with minimal dependencies
+
+## Usage
+
+```python
+import numpy as np
+from proximal import prox_gradient
+
+# Create a matrix and vector for the optimization problem
+mat = np.array([[1.0, 0.5], [0.5, 1.0]])  # Example covariance matrix
+vec = np.ones(2)  # Target vector
+
+# Solve the optimization problem
+# Find x that minimizes 0.5 ||mat @ x - vec||^2 subject to x >= 0, sum(x) = 1
+result = prox_gradient(mat, vec, eps_rel=1e-6, max_iter=1000)
+
+print(result)  # Optimal weights that satisfy the constraints
+```
+
+For portfolio optimization, you might use a covariance matrix of asset returns:
+
+```python
+# Load a covariance matrix of asset returns
+covar = np.genfromtxt("returns_covariance.csv", delimiter=",")
+
+# Find the optimal portfolio weights
+weights = prox_gradient(covar, np.ones(covar.shape[0]))
+
+# weights will be non-negative and sum to 1
+```
+
 ## Getting Started
 
 ### **Set Up Environment**
