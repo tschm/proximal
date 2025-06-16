@@ -12,10 +12,9 @@ jobs:
   marimo:
     runs-on: "ubuntu-latest"
     steps:
-      - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.1.72
-
-      - uses: tschm/cradle/actions/marimo@v0.1.72
+      - uses: tschm/marimushka/actions/export@v0.0.16
+        with:
+          notebooks: 'book/marimo'
 
   pdoc:
     runs-on: "ubuntu-latest"
