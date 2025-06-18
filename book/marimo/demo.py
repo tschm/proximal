@@ -14,6 +14,7 @@ app = marimo.App()
 with app.setup:
     import marimo as mo
 
+
 @app.cell
 def _():
     mo.md(r"""# Demo""")
