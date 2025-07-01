@@ -20,9 +20,9 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.1.72
+        uses: tschm/cradle/actions/environment@v0.1.73
 
-      - uses: tschm/cradle/actions/pdoc@v0.1.72
+      - uses: tschm/cradle/actions/pdoc@v0.1.73
         with:
           source-folder: 'src/proximal'
 
@@ -30,9 +30,9 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.1.72
+        uses: tschm/cradle/actions/environment@v0.1.73
 
-      - uses: tschm/cradle/actions/coverage@v0.1.72
+      - uses: tschm/cradle/actions/coverage@v0.1.73
         with:
           source-folder: 'src/proximal'
           tests-folder: 'src/tests'
@@ -42,9 +42,9 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Build the virtual environment for ${{ github.repository }}"
-        uses: tschm/cradle/actions/environment@v0.1.72
+        uses: tschm/cradle/actions/environment@v0.1.73
 
-      - uses: tschm/cradle/actions/jupyter@v0.1.72
+      - uses: tschm/cradle/actions/jupyter@v0.1.73
 
   book:
     runs-on: "ubuntu-latest"
@@ -58,4 +58,4 @@ jobs:
       id-token: write
 
     steps:
-      - uses: tschm/cradle/actions/book@v0.1.72
+      - uses: tschm/cradle/actions/book@v0.1.73
