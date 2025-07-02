@@ -2,8 +2,7 @@
 name = 'proximal'
 version = "0.0.0"
 description = "Solving constrained linear least squares"
-# Please add authors and correct the email...
-authors = [{name='tschm', email= 'tschm@mailinator.com'}]
+authors = [{name='Thomas Schmelzer', email= 'thomas.schmelzer@gmail.com'}]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
