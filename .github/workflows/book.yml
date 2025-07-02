@@ -50,7 +50,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: tschm/cradle/actions/book@v0.1.73
+      - uses: tschm/cradle/actions/book@v0.1.75
         with:
           title: 'Proximal'
           links: |
