@@ -5,8 +5,6 @@
 [![Created with Cradle](https://img.shields.io/badge/Created%20with-Cradle-blue?style=flat-square)](https://github.com/tschm/package)
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/renovatebot/renovate)
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/tschm/proximal)
-
 ## Overview
 
 Proximal is a Python library for solving constrained linear least squares
@@ -51,18 +49,6 @@ result = prox_gradient(mat, vec, eps_rel=1e-6, max_iter=1000)
 print(result)  # Optimal weights that satisfy the constraints
 ```
 
-For portfolio optimization, you might use a covariance matrix of asset returns:
-
-```python
-# Load a covariance matrix of asset returns
-covar = np.genfromtxt("returns_covariance.csv", delimiter=",")
-
-# Find the optimal portfolio weights
-weights = prox_gradient(covar, np.ones(covar.shape[0]))
-
-# weights will be non-negative and sum to 1
-```
-
 ## Getting Started
 
 ### **Set Up Environment**
@@ -70,29 +56,6 @@ weights = prox_gradient(covar, np.ones(covar.shape[0]))
 ```bash
 make install
 ```
-
-This installs/updates [uv](https://github.com/astral-sh/uv),
-creates your virtual environment and installs dependencies.
-
-For adding or removing packages:
-
-```bash
-uv add/remove requests  # for main dependencies
-uv add/remove requests --dev  # for dev dependencies
-```
-
-### **Configure Pre-commit Hooks**
-
-```bash
-make fmt
-```
-
-Installs hooks to maintain code quality and formatting.
-
-### **Update Project Info**
-
-- Edit `pyproject.toml` to update authors and email addresses
-- Configure GitHub Pages (branch: gh-pages) in repository settings
 
 ## Development Commands
 
