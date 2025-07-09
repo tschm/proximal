@@ -24,7 +24,7 @@ jobs:
 
       - uses: tschm/cradle/actions/pdoc@v0.3.01
         with:
-          source-folder: 'src/proximal'
+          source-folder: 'src/proximal_lq'
 
   test:
     runs-on: "ubuntu-latest"
@@ -56,4 +56,6 @@ jobs:
           links: |
             {
               "API": "./pdoc/index.html"
+              "Coverage":"./tests/html-coverage/index.html",
+              "Tests":"./tests/html-report/report.html"
             }
