@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from proximal import prox_gradient
+from proximal_lq import prox_gradient
 
 
 def test_cla(resource_dir):
