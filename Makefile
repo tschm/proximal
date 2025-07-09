@@ -9,20 +9,19 @@ RESET := \033[0m
 
 ##@ Development Setup
 
-venv:
+uv:
 	@printf "$(BLUE)Creating virtual environment...$(RESET)\n"
 	@curl -LsSf https://astral.sh/uv/install.sh | sh
-	@uv venv --python 3.12
 
-install: venv ## Install all dependencies using uv
+install: uv ## Install all dependencies using uv
 	@printf "$(BLUE)Installing dependencies...$(RESET)\n"
+	@uv venv --python 3.12
 	@uv sync --dev --frozen
 
 ##@ Code Quality
 
-fmt: venv ## Run code formatting and linting
+fmt: uv ## Run code formatting and linting
 	@printf "$(BLUE)Running formatters and linters...$(RESET)\n"
-	@uvx pre-commit install
 	@uvx pre-commit run --all-files
 
 ##@ Testing
@@ -40,10 +39,9 @@ clean: ## Clean generated files and directories
 
 ##@ Marimo & Jupyter
 
-marimo: install ## Start a Marimo server
+marimo: uv ## Start a Marimo server
 	@printf "$(BLUE)Start Marimo server...$(RESET)\n"
-	@uv pip install marimo
-	@uv run marimo edit book/marimo
+	@uvx marimo edit --sandbox book/marimo/demo.py
 
 ##@ Help
 
