@@ -16,7 +16,7 @@ uv:
 install: uv ## Install all dependencies using uv
 	@printf "$(BLUE)Installing dependencies...$(RESET)\n"
 	@uv venv --python 3.12
-	@uv sync --dev --frozen
+	@uv sync --all-extras --frozen
 
 ##@ Code Quality
 
@@ -39,9 +39,14 @@ clean: ## Clean generated files and directories
 
 ##@ Marimo & Jupyter
 
-marimo: uv ## Start a Marimo server
+marimo-sandbox: uv ## Start a Marimo server
 	@printf "$(BLUE)Start Marimo server...$(RESET)\n"
 	@uvx marimo edit --sandbox book/marimo/demo.py
+
+marimo: install ## Start a Marimo server
+	@printf "$(BLUE)Start Marimo server...$(RESET)\n"
+	@uv pip install marimo
+	@uv run marimo edit book/marimo/demo.py
 
 ##@ Help
 
