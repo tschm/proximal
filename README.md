@@ -2,7 +2,6 @@
 
 [![PyPI version](https://badge.fury.io/py/proximal.svg)](https://badge.fury.io/py/proximal)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/tschm/proximal/actions/workflows/ci.yml/badge.svg)](https://github.com/tschm/proximal/actions/workflows/ci.yml)
 [![Created with Cradle](https://img.shields.io/badge/Created%20with-Cradle-blue?style=flat-square)](https://github.com/tschm/package)
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/renovatebot/renovate)
 
