@@ -36,7 +36,7 @@ that projects onto the probability simplex.
 
 ```python
 import numpy as np
-from proximal import prox_gradient
+from proximal_lq import prox_gradient
 
 # Create a matrix and vector for the optimization problem
 mat = np.array([[1.0, 0.5], [0.5, 1.0]])  # Example covariance matrix
