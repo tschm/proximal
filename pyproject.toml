@@ -16,9 +16,7 @@ repository = "https://github.com/tschm/proximal"
 dev = [
     "pre-commit==4.2.0",
     "pytest==8.4.1",
-    "pytest-cov==6.2.1",
-    "pandas>=2.3.1",
-    "matplotlib==3.10.3"
+    "pytest-cov==6.2.1"
 ]
 
 [build-system]
