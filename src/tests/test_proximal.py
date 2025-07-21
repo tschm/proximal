@@ -16,7 +16,7 @@ def test_cla(resource_dir):
     resource_dir : Path
         The directory containing the "CLA_Data.csv" file with necessary data.
 
-    Raises
+    Raises:
     ------
     AssertionError
         If the output of the prox_gradient function does not match the expected

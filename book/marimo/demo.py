@@ -30,11 +30,13 @@ def _():
         r"""
     # Proximal Gradient Method for Simplex-Constrained Optimization
 
-    This notebook demonstrates the use of the `proximal_lq` package, which provides efficient solvers for optimization problems of the form:
+    This notebook demonstrates the use of the `proximal_lq` package, which provides
+    efficient solvers for optimization problems of the form:
 
     $$\min_x \frac{1}{2} \|Ax - b\|^2 \quad \text{subject to} \quad x \geq 0, \sum_i x_i = 1$$
 
-    These types of problems appear in various applications including portfolio optimization, machine learning, and signal processing.
+    These types of problems appear in various applications including portfolio optimization,
+    machine learning, and signal processing.
     """
     )
     return
@@ -46,7 +48,8 @@ def _():
         r"""
     ## 1. Projection onto the Probability Simplex
 
-    The first key function in the package is `proj_simplex`, which projects a vector onto the probability simplex.
+    The first key function in the package is `proj_simplex`, which projects a
+    vector onto the probability simplex.
     The probability simplex is the set of non-negative vectors that sum to 1:
 
     $$\Delta = \{x \in \mathbb{R}^n : x \geq 0, \sum_i x_i = 1\}$$
@@ -111,7 +114,8 @@ def _():
 
     ## 2. Proximal Gradient Method
 
-    The main function in the package is `prox_gradient`, which solves optimization problems of the form:
+    The main function in the package is `prox_gradient`, which solves optimization
+    problems of the form:
 
     $$\min_x \frac{1}{2} \|Ax - b\|^2 \quad \text{subject to} \quad x \geq 0, \sum_i x_i = 1$$
 
@@ -150,13 +154,16 @@ def _():
         r"""
     ## Conclusion
 
-    The `proximal_lq` package provides efficient solvers for optimization problems with simplex constraints.
-    These types of problems appear in various applications, with portfolio optimization being a prominent example.
+    The `proximal_lq` package provides efficient solvers for optimization problems with
+    simplex constraints.
+    These types of problems appear in various applications, with portfolio
+    optimization being a prominent example.
 
     The key functions are:
 
     1. `proj_simplex`: Projects a vector onto the probability simplex
-    2. `prox_gradient`: Solves optimization problems of the form $\min_x \frac{1}{2} \|Ax - b\|^2$ subject to simplex constraints
+    2. `prox_gradient`: Solves optimization problems of the form $\min_x \frac{1}{2} \|Ax - b\|^2$
+    subject to simplex constraints
 
     These functions are implemented efficiently and can handle large-scale problems.
     """
