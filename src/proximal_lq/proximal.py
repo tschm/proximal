@@ -21,12 +21,12 @@ def proj_simplex(vec, rad=1):
         Radius of the simplex. The projected vector will have components summing
         to this value. Default is 1.
 
-    Returns
+    Returns:
     -------
     ndarray
         The projected vector that lies on the probability simplex.
 
-    Raises
+    Raises:
     ------
     ValueError
         If the input vector is empty.
@@ -59,13 +59,13 @@ def prox_gradient(mat, vec, eps_rel=1e-6, max_iter=1000):
     max_iter : int, optional
         The maximum number of iterations for the algorithm. Default is 1000.
 
-    Returns
+    Returns:
     -------
     np.ndarray
         The solution vector of shape (n_features,) obtained after the
         optimization process.
 
-    Raises
+    Raises:
     ------
     None
 
