@@ -1,13 +1,3 @@
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "marimo==0.13.15",
-#     "matplotlib==3.10.3",
-#     "numpy==2.3.1",
-#     "pandas==2.3.1",
-#     "proximal-lq"
-# ]
-# ///
 """Demonstration of the Proximal Gradient Method for Simplex-Constrained Optimization."""
 
 import marimo
