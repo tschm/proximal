@@ -14,7 +14,7 @@ repository = "https://github.com/tschm/proximal"
 
 [project.optional-dependencies]
 dev = [
-    "pre-commit==4.2.0",
+    "pre-commit==4.3.0",
     "pytest==8.4.1",
     "pytest-cov==6.2.1",
     "marimo==0.14.16",
