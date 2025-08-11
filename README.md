@@ -35,16 +35,16 @@ that projects onto the probability simplex.
 ## Usage
 
 ```python
-import numpy as np
-from proximal_lq import prox_gradient
+>>> import numpy as np
+>>> from proximal_lq import prox_gradient
 
 # Create a matrix and vector for the optimization problem
-mat = np.array([[1.0, 0.5], [0.5, 1.0]])  # Example covariance matrix
-vec = np.ones(2)  # Target vector
+>>> mat = np.array([[1.0, 0.5], [0.5, 1.0]])  # Example covariance matrix
+>>> vec = np.ones(2)  # Target vector
 
 # Solve the optimization problem
 # Find x that minimizes 0.5 ||mat @ x - vec||^2 subject to x >= 0, sum(x) = 1
-result = prox_gradient(mat, vec, eps_rel=1e-6, max_iter=1000)
+>>> result = prox_gradient(mat, vec, eps_rel=1e-6, max_iter=1000)
 
 print(result)  # Optimal weights that satisfy the constraints
 ```
