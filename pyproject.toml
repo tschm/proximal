@@ -19,7 +19,8 @@ dev = [
     "pytest-cov==6.2.1",
     "marimo==0.14.16",
     "matplotlib==3.10.3",
-    "pandas==2.3.1"
+    "pandas==2.3.1",
+    "go-task-bin"
 ]
 
 [build-system]
