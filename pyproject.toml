@@ -17,7 +17,7 @@ dev = [
     "pre-commit==4.3.0",
     "pytest==8.4.1",
     "pytest-cov==6.2.1",
-    "marimo==0.15.0",
+    "marimo==0.15.2",
     "matplotlib==3.10.5",
     "pandas==2.3.2",
     "go-task-bin"
