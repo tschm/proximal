@@ -49,6 +49,11 @@ result = prox_gradient(mat, vec, eps_rel=1e-6, max_iter=1000)
 print(result)  # Optimal weights that satisfy the constraints
 ```
 
+```result
+Hello
+```
+
+
 ## Getting Started
 
 ### **Set Up Environment**
