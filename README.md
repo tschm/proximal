@@ -46,11 +46,11 @@ vec = np.ones(2)  # Target vector
 # Find x that minimizes 0.5 ||mat @ x - vec||^2 subject to x >= 0, sum(x) = 1
 result = prox_gradient(mat, vec, eps_rel=1e-6, max_iter=1000)
 
-print(result)  # Optimal weights that satisfy the constraints
+print(np.round(result,4))  # Optimal weights that satisfy the constraints
 ```
 
 ```result
-Hello
+[0.5 0.5]
 ```
 
 
