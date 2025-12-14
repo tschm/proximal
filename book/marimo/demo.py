@@ -1,5 +1,18 @@
 """Demonstration of the Proximal Gradient Method for Simplex-Constrained Optimization."""
 
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "matplotlib",
+#     "marimo==0.18.4",
+#     "numpy==2.3.5",
+#     "pandas",
+#     "proximal-lq",
+# ]
+# [tool.uv.sources]
+# proximal-lq = { path = "../..", editable=true }
+# ///
+
 import marimo
 
 __generated_with = "0.14.10"
