@@ -18,7 +18,7 @@ dev = [
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
     "marimo==0.18.3",
-    "matplotlib==3.10.7",
+    "matplotlib==3.10.8",
     "pandas==2.3.3",
     "go-task-bin"
 ]
