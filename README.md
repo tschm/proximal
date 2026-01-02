@@ -1,9 +1,6 @@
 # [proximal](/book)
 
-[![PyPI version](https://badge.fury.io/py/proximal.svg)](https://badge.fury.io/py/proximal)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Created with Cradle](https://img.shields.io/badge/Created%20with-Cradle-blue?style=flat-square)](https://github.com/tschm/package)
-[![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/renovatebot/renovate)
 
 ## Overview
 
