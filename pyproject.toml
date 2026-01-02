@@ -17,7 +17,7 @@ dev = [
     "marimo==0.18.4",
     "matplotlib==3.10.8",
     "pandas>=2.3",
-    "go-task-bin",
+    #"go-task-bin",
     "plotly>=6.5",
 ]
 
