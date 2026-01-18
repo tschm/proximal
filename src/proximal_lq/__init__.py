@@ -29,7 +29,7 @@ Examples:
 import importlib.metadata
 
 __version__ = importlib.metadata.version("proximal-lq")
-__all__ = ["proj_simplex", "prox_gradient", "__version__"]
+__all__ = ["__version__", "proj_simplex", "prox_gradient"]
 
 from .proximal import proj_simplex as proj_simplex
 from .proximal import prox_gradient as prox_gradient
