@@ -67,7 +67,8 @@ def proj_simplex(
     muu = np.sort(vec)[::-1]
     cummeans = 1 / np.arange(1, len(vec) + 1) * (np.cumsum(muu) - rad)
     rho = max(np.where(muu > cummeans)[0])
-    return np.maximum(vec - cummeans[rho], 0)
+    result: NDArray[np.floating] = np.maximum(vec - cummeans[rho], 0)
+    return result
 
 
 def prox_gradient(
@@ -115,7 +116,7 @@ def prox_gradient(
 
     """
     rng = np.random.default_rng()
-    prim_var = rng.standard_normal(mat.shape[1])
+    prim_var: NDArray[np.floating] = np.asarray(rng.standard_normal(size=mat.shape[1]))
     sym_mat = mat.T @ mat
     lip = np.linalg.norm(sym_mat, 2)  # Lipschitz constant of the gradient
     step = 0.5 / lip if abs(lip) > 1e-15 else 1.0
@@ -125,7 +126,7 @@ def prox_gradient(
     err_rel = eps_rel + 1
     while err_rel > eps_rel and ite < max_iter:
         prim_var_new = proj_simplex(prim_var - step * (sym_mat @ prim_var - out_prod))
-        err_rel = np.linalg.norm(prim_var - prim_var_new, 2)
+        err_rel = float(np.linalg.norm(prim_var - prim_var_new, 2))
         prim_var = prim_var_new.copy()
         ite += 1
     return prim_var

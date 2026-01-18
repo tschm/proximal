@@ -87,7 +87,7 @@ def _():
 @app.cell
 def _(x, x_proj):
     # Visualize the projection
-    fig, ax = plt.subplots(figsize=(10, 6))
+    _fig, ax = plt.subplots(figsize=(10, 6))
 
     bar_width = 0.35
     x_pos = np.arange(len(x))
