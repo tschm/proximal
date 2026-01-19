@@ -61,3 +61,12 @@ packages = ["src/proximal_lq"]
 
 [tool.marimo.runtime]
 pythonpath = ["src"]
+
+[tool.deptry.package_module_name_map]
+numpy = "numpy"
+marimo = "marimo"
+matplotlib = "matplotlib"
+pandas = "pandas"
+plotly = "plotly"
+pytest = "pytest"
+pytest-cov = "pytest_cov"
