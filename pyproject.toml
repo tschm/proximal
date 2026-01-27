@@ -42,7 +42,7 @@ Changelog = "https://github.com/tschm/proximal/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
-    "marimo==0.19.4",
+    "marimo==0.19.6",
     "matplotlib==3.10.8",
     "pandas>=2.3",
     "plotly>=6.5",
