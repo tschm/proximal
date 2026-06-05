@@ -1,0 +1,40 @@
+INHERIT: docs/mkdocs-base.yml
+
+site_name: proximal-lq
+site_description: Fast solver for simplex-constrained linear least squares optimization.
+site_author: Thomas Schmelzer
+site_url: https://tschm.github.io/proximal/
+repo_url: https://github.com/tschm/proximal
+repo_name: tschm/proximal
+copyright: Copyright &copy; 2024–2026 Thomas Schmelzer
+
+nav:
+  - Home: index.md
+  - Development:
+    - Guide: DEVELOPMENT.md
+    - Marimo Notebooks: development/MARIMO.md
+    - Tests: development/TESTS.md
+  - Reports:
+    - Test Report: reports/html-report/report.html
+    - Coverage Report: reports/html-coverage/index.html
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/tschm/proximal
+
+theme:
+  icon:
+    logo: material/chart-bell-curve
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
