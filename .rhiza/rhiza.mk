@@ -1,10 +1,15 @@
 ## Makefile for jebel-quant/rhiza
 # (https://github.com/jebel-quant/rhiza)
 #
-# Purpose: Developer tasks using uv/uvx (install, test, docs, marimushka, book).
+# Purpose: Developer tasks using uv/uvx (install, test, book).
 # Lines with `##` after a target are parsed into help text,
 # and lines starting with `##@` create section headers in the help output.
 #
+# Require GNU Make (MAKE_VERSION is unset in BSD make)
+ifndef MAKE_VERSION
+$(error GNU Make is required. macOS ships BSD make — install GNU Make with: brew install make)
+endif
+
 # Colours for pretty output in help messages
 BLUE := \033[36m
 BOLD := \033[1m
@@ -18,14 +23,7 @@ RESET := \033[0m
 
 # Declare phony targets (they don't produce files)
 .PHONY: \
-	bump \
-	clean \
-	deptry \
-	fmt \
-	mypy \
 	help \
-	install \
-	install-uv \
 	post-bump \
 	post-install \
 	post-release \
@@ -36,12 +34,13 @@ RESET := \033[0m
 	pre-release \
 	pre-sync \
 	pre-validate \
-	release \
-	sync \
+	print-logo \
+	readme \
 	summarise-sync \
-	update-readme \
+	sync \
 	validate \
-	version-matrix
+	version-matrix \
+	ci-os-matrix
 
 # we need absolute paths!
 INSTALL_DIR ?= $(abspath ./bin)
@@ -50,33 +49,30 @@ UVX_BIN ?= $(shell command -v uvx 2>/dev/null || echo ${INSTALL_DIR}/uvx)
 VENV ?= .venv
 
 # Read Python version from .python-version (single source of truth)
-PYTHON_VERSION ?= $(shell cat .python-version 2>/dev/null || echo "3.13")
+PYTHON_VERSION ?= $(strip $(shell cat .python-version 2>/dev/null || echo "3.13"))
 export PYTHON_VERSION
 
 # Read Rhiza version from .rhiza/.rhiza-version (single source of truth for rhiza-tools)
-RHIZA_VERSION ?= $(shell cat .rhiza/.rhiza-version 2>/dev/null || echo "0.9.0")
+RHIZA_VERSION ?= $(shell cat .rhiza/.rhiza-version 2>/dev/null || echo "0.10.2")
 export RHIZA_VERSION
+
+# Default sync schedule (cron expression for GitHub Actions sync workflow)
+# Override in your root Makefile to customise when sync runs.
+# Example: RHIZA_SYNC_SCHEDULE = 0 9 * * 1-5  (weekdays at 9 AM UTC)
+RHIZA_SYNC_SCHEDULE ?= 0 0 * * 1
 
 export UV_NO_MODIFY_PATH := 1
 export UV_VENV_CLEAR := 1
 
+# Unset VIRTUAL_ENV to prevent uv from warning about path mismatches
+# when a virtual environment is already activated in the shell
+unexport VIRTUAL_ENV
+
 # Load .rhiza/.env (if present) and export its variables so recipes see them.
 -include .rhiza/.env
 
-# Include split Makefiles
--include tests/tests.mk
--include book/book.mk
--include book/marimo/marimo.mk
--include presentation/presentation.mk
--include docker/docker.mk
--include .github/agents/agentic.mk
-# .rhiza/rhiza.mk is INLINED below
--include .github/github.mk
-
-
-
 # ==============================================================================
-# Rhiza Core Actions (formerly .rhiza/rhiza.mk)
+# Rhiza Core
 # ==============================================================================
 
 # RHIZA_LOGO definition
@@ -91,19 +87,15 @@ endef
 export RHIZA_LOGO
 
 # Declare phony targets for Rhiza Core
-.PHONY: print-logo sync validate readme pre-sync post-sync pre-validate post-validate
+.PHONY: print-logo sync sync-experimental materialize validate readme pre-sync post-sync pre-validate post-validate _apply-sync-schedule
 
 # Hook targets (double-colon rules allow multiple definitions)
+# Note: pre-install/post-install are defined in bootstrap.mk
+# Note: pre-bump/post-bump/pre-release/post-release are defined in releasing.mk
 pre-sync:: ; @:
 post-sync:: ; @:
 pre-validate:: ; @:
 post-validate:: ; @:
-pre-install:: ; @:
-post-install:: ; @:
-pre-release:: ; @:
-post-release:: ; @:
-pre-bump:: ; @:
-post-bump:: ; @:
 
 ##@ Rhiza Workflows
 
@@ -115,152 +107,49 @@ sync: pre-sync ## sync with template repository as defined in .rhiza/template.ym
 	@if git remote get-url origin 2>/dev/null | grep -iqE 'jebel-quant/rhiza(\.git)?$$'; then \
 		printf "${BLUE}[INFO] Skipping sync in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
-		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=$(RHIZA_VERSION)" materialize --force .; \
+		$(MAKE) install-uv && \
+		${UVX_BIN} "rhiza==$(RHIZA_VERSION)" sync . && \
+		$(MAKE) _apply-sync-schedule; \
 	fi
 	@$(MAKE) post-sync
+
+_apply-sync-schedule: ## (internal) apply RHIZA_SYNC_SCHEDULE override to GitHub Actions sync workflow
+	@if [ "$(RHIZA_SYNC_SCHEDULE)" != "0 0 * * 1" ] && [ -f .github/workflows/rhiza_sync.yml ]; then \
+		sed -i.bak "s|cron: '[^']*'|cron: '$(RHIZA_SYNC_SCHEDULE)'|" .github/workflows/rhiza_sync.yml && rm -f .github/workflows/rhiza_sync.yml.bak; \
+		printf "${BLUE}[INFO] Applied custom sync schedule: $(RHIZA_SYNC_SCHEDULE)${RESET}\n"; \
+	fi
+
+materialize: ## [DEPRECATED] use 'make sync' instead — materialize --force is now sync
+	@printf "${YELLOW}[WARN] 'make materialize' is deprecated and will be removed in a future release.${RESET}\n"
+	@printf "${YELLOW}[WARN] Please use 'make sync' instead (e.g. 'materialize --force' is now 'make sync').${RESET}\n"
+	@$(MAKE) sync
 
 summarise-sync: install-uv ## summarise differences created by sync with template repository
 	@if git remote get-url origin 2>/dev/null | grep -iqE 'jebel-quant/rhiza(\.git)?$$'; then \
 		printf "${BLUE}[INFO] Skipping summarise-sync in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=$(RHIZA_VERSION)" summarise .; \
+		${UVX_BIN} "rhiza==$(RHIZA_VERSION)" summarise .; \
 	fi
 
-validate: pre-validate ## validate project structure against template repository as defined in .rhiza/template.yml
+rhiza-test: install ## run rhiza's own tests (if any)
+	@if [ -d ".rhiza/tests" ]; then \
+		${UV_BIN} run pytest .rhiza/tests; \
+	else \
+		printf "${YELLOW}[WARN] No .rhiza/tests directory found, skipping rhiza-tests${RESET}\n"; \
+	fi
+
+validate: pre-validate rhiza-test ## validate project structure against template repository as defined in .rhiza/template.yml
 	@if git remote get-url origin 2>/dev/null | grep -iqE 'jebel-quant/rhiza(\.git)?$$'; then \
 		printf "${BLUE}[INFO] Skipping validate in rhiza repository (no template.yml by design)${RESET}\n"; \
 	else \
 		$(MAKE) install-uv; \
-		${UVX_BIN} "rhiza>=$(RHIZA_VERSION)" validate .; \
+		${UVX_BIN} "rhiza==$(RHIZA_VERSION)" validate .; \
 	fi
 	@$(MAKE) post-validate
 
 readme: install-uv ## update README.md with current Makefile help output
 	@${UVX_BIN} "rhiza-tools>=0.2.0" update-readme
-
-# ==============================================================================
-# End Rhiza Core Actions
-# ==============================================================================
-
-##@ Bootstrap
-install-uv: ## ensure uv/uvx is installed
-	# Ensure the ${INSTALL_DIR} folder exists
-	@mkdir -p ${INSTALL_DIR}
-
-	# Install uv/uvx only if they are not already present in PATH or in the install dir
-	@if command -v uv >/dev/null 2>&1 && command -v uvx >/dev/null 2>&1; then \
-	  :; \
-	elif [ -x "${INSTALL_DIR}/uv" ] && [ -x "${INSTALL_DIR}/uvx" ]; then \
-	  printf "${BLUE}[INFO] uv and uvx already installed in ${INSTALL_DIR}, skipping.${RESET}\n"; \
-	else \
-	  printf "${BLUE}[INFO] Installing uv and uvx into ${INSTALL_DIR}...${RESET}\n"; \
-	  if ! curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR="${INSTALL_DIR}" sh >/dev/null 2>&1; then \
-	    printf "${RED}[ERROR] Failed to install uv${RESET}\n"; \
-	    exit 1; \
-	  fi; \
-	fi
-
-install: pre-install install-uv ## install
-	# Create the virtual environment only if it doesn't exist
-	@if [ ! -d "${VENV}" ]; then \
-	  ${UV_BIN} venv $(if $(PYTHON_VERSION),--python $(PYTHON_VERSION)) ${VENV} || { printf "${RED}[ERROR] Failed to create virtual environment${RESET}\n"; exit 1; }; \
-	else \
-	  printf "${BLUE}[INFO] Using existing virtual environment at ${VENV}, skipping creation${RESET}\n"; \
-	fi
-
-	# Install the dependencies from pyproject.toml (if it exists)
-	@if [ -f "pyproject.toml" ]; then \
-	  if [ -f "uv.lock" ]; then \
-	    printf "${BLUE}[INFO] Installing dependencies from lock file${RESET}\n"; \
-	    ${UV_BIN} sync --all-extras --all-groups --frozen || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
-	  else \
-	    printf "${YELLOW}[WARN] uv.lock not found. Generating lock file and installing dependencies...${RESET}\n"; \
-	    ${UV_BIN} sync --all-extras || { printf "${RED}[ERROR] Failed to install dependencies${RESET}\n"; exit 1; }; \
-	  fi; \
-	else \
-	  printf "${YELLOW}[WARN] No pyproject.toml found, skipping install${RESET}\n"; \
-	fi
-
-	# Install dev dependencies from .rhiza/requirements/*.txt files
-	@if [ -d ".rhiza/requirements" ] && ls .rhiza/requirements/*.txt >/dev/null 2>&1; then \
-	  for req_file in .rhiza/requirements/*.txt; do \
-	    if [ -f "$$req_file" ]; then \
-	      printf "${BLUE}[INFO] Installing requirements from $$req_file${RESET}\n"; \
-	      ${UV_BIN} pip install -r "$$req_file" || { printf "${RED}[ERROR] Failed to install requirements from $$req_file${RESET}\n"; exit 1; }; \
-	    fi; \
-	  done; \
-	fi
-
-	# Check if there is requirements.txt file in the tests folder (legacy support)
-	@if [ -f "tests/requirements.txt" ]; then \
-	  printf "${BLUE}[INFO] Installing requirements from tests/requirements.txt${RESET}\n"; \
-	  ${UV_BIN} pip install -r tests/requirements.txt || { printf "${RED}[ERROR] Failed to install test requirements${RESET}\n"; exit 1; }; \
-	fi
-	@$(MAKE) post-install
-
-clean: ## Clean project artifacts and stale local branches
-	@printf "%bCleaning project...%b\n" "$(BLUE)" "$(RESET)"
-
-	# Remove ignored files/directories, but keep .env files, tested with futures project
-	@git clean -d -X -f \
-		-e '!.env' \
-		-e '!.env.*'
-
-	# Remove build & test artifacts
-	@rm -rf \
-		dist \
-		build \
-		*.egg-info \
-		.coverage \
-		.pytest_cache \
-		.benchmarks
-
-	@printf "%bRemoving local branches with no remote counterpart...%b\n" "$(BLUE)" "$(RESET)"
-
-	@git fetch --prune
-
-	@git branch -vv | awk '/: gone]/{print $$1}' | xargs -r git branch -D
-
-##@ Quality and Formatting
-deptry: install-uv ## Run deptry
-	@if [ -d ${SOURCE_FOLDER} ]; then \
-		$(UVX_BIN) -p ${PYTHON_VERSION} deptry ${SOURCE_FOLDER}; \
-	fi
-
-	@if [ -d ${MARIMO_FOLDER} ]; then \
-		if [ -d ${SOURCE_FOLDER} ]; then \
-			$(UVX_BIN) -p ${PYTHON_VERSION} deptry ${MARIMO_FOLDER} ${SOURCE_FOLDER} --ignore DEP004; \
-		else \
-		  	$(UVX_BIN) -p ${PYTHON_VERSION} deptry ${MARIMO_FOLDER} --ignore DEP004; \
-		fi \
-	fi
-
-fmt: install-uv ## check the pre-commit hooks and the linting
-	@${UVX_BIN} -p ${PYTHON_VERSION} pre-commit run --all-files
-
-mypy: install-uv ## run mypy analysis
-	@if [ -d ${SOURCE_FOLDER} ]; then \
-		${UVX_BIN} -p ${PYTHON_VERSION} mypy ${SOURCE_FOLDER} --strict --config-file=pyproject.toml; \
-	fi
-
-##@ Releasing and Versioning
-bump: pre-bump ## bump version
-	@if [ -f "pyproject.toml" ]; then \
-		$(MAKE) install; \
-		${UVX_BIN} "rhiza[tools]>=0.8.6" tools bump; \
-		printf "${BLUE}[INFO] Updating uv.lock file...${RESET}\n"; \
-		${UV_BIN} lock; \
-	else \
-		printf "${YELLOW}[WARN] No pyproject.toml found, skipping bump${RESET}\n"; \
-	fi
-	@$(MAKE) post-bump
-
-release: pre-release install-uv ## create tag and push to remote with prompts
-	@UV_BIN="${UV_BIN}" /bin/sh ".rhiza/scripts/release.sh"
-	@$(MAKE) post-release
-
 
 ##@ Meta
 
@@ -272,7 +161,10 @@ help: print-logo ## Display this help message
 	+@printf "\n"
 
 version-matrix: install-uv ## Emit the list of supported Python versions from pyproject.toml
-	@${UV_BIN} run .rhiza/utils/version_matrix.py
+	@${UVX_BIN} "rhiza-tools>=0.2.2" version-matrix
+
+ci-os-matrix: ## Emit GitHub CI OSes (RHIZA_CI_OS_MATRIX as JSON array, default ["ubuntu-latest"])
+	@printf '%s\n' '$(or $(RHIZA_CI_OS_MATRIX),["ubuntu-latest"])'
 
 print-% : ## print the value of a variable (usage: make print-VARIABLE)
 	@printf "${BLUE}[INFO] Printing value of variable '$*':${RESET}\n"
@@ -284,4 +176,3 @@ print-% : ## print the value of a variable (usage: make print-VARIABLE)
 
 # Optional: repo extensions (committed)
 -include .rhiza/make.d/*.mk
-
