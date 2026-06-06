@@ -1,6 +1,6 @@
 [project]
 name = "proximal-lq"
-version = "0.2.1"
+version = "0.2.2"
 description = "Fast solver for simplex-constrained linear least squares optimization"
 authors = [{name = "Thomas Schmelzer", email = "thomas.schmelzer@gmail.com"}]
 readme = "README.md"
