@@ -109,6 +109,11 @@ class TestProjSimplex:
         np.testing.assert_allclose(result.sum(), 1.0, rtol=1e-10)
         assert np.all(result >= 0)
 
+    def test_empty_input_raises(self) -> None:
+        """Empty input should raise a clear ValueError."""
+        with pytest.raises(ValueError, match="non-empty"):
+            proj_simplex(np.array([]))
+
 
 class TestProxGradient:
     """Test suite for prox_gradient function."""

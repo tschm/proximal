@@ -64,10 +64,18 @@ def proj_simplex(
     True
 
     """
-    muu = np.sort(vec)[::-1]
-    cummeans = 1 / np.arange(1, len(vec) + 1) * (np.cumsum(muu) - rad)
-    rho = max(np.where(muu > cummeans)[0])
-    result: NDArray[np.floating] = np.maximum(vec - cummeans[rho], 0)
+    if vec.size == 0:
+        msg = "vec must be non-empty"
+        raise ValueError(msg)
+
+    # Duchi et al. (2008): sort descending, find the largest index rho whose
+    # sorted value still exceeds the running mean, then shift by that mean and
+    # clip negatives to zero.
+    sorted_desc = np.sort(vec)[::-1]
+    running_mean = (np.cumsum(sorted_desc) - rad) / np.arange(1, len(vec) + 1)
+    rho = np.max(np.where(sorted_desc > running_mean)[0])
+    threshold = running_mean[rho]
+    result: NDArray[np.floating] = np.maximum(vec - threshold, 0)
     return result
 
 
