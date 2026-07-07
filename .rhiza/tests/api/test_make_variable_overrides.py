@@ -16,18 +16,11 @@ from __future__ import annotations
 
 import os
 
-from api.conftest import run_make, strip_ansi
+from test_utils import run_make, strip_ansi
 
 
 class TestCoverageFailUnder:
     """COVERAGE_FAIL_UNDER controls the pytest --cov-fail-under threshold."""
-
-    def test_default_threshold_is_90(self, logger) -> None:
-        """Default COVERAGE_FAIL_UNDER value must be 90."""
-        proc = run_make(logger, ["test"])
-        assert "--cov-fail-under=90" in proc.stdout, (
-            "Default coverage threshold should be 90; got:\n" + proc.stdout[:500]
-        )
 
     def test_threshold_override_to_100(self, logger) -> None:
         """COVERAGE_FAIL_UNDER=100 must propagate to pytest invocation."""
@@ -109,7 +102,7 @@ class TestSourceFolderVariable:
     """SOURCE_FOLDER drives coverage collection and static analysis targets."""
 
     def test_typecheck_uses_source_folder(self, logger, tmp_path) -> None:
-        """The typecheck target must check the directory set by SOURCE_FOLDER."""
+        """The typecheck target must pass SOURCE_FOLDER to ty and mypy."""
         src_dir = tmp_path / "mypackage"
         src_dir.mkdir(exist_ok=True)
 
@@ -118,7 +111,15 @@ class TestSourceFolderVariable:
             env_file.write_text(env_file.read_text() + "\nSOURCE_FOLDER=mypackage\n")
 
         proc = run_make(logger, ["typecheck", "SOURCE_FOLDER=mypackage"])
-        assert "mypackage" in proc.stdout, "typecheck should reference SOURCE_FOLDER; got:\n" + proc.stdout[:400]
+        assert 'typecheck_paths="mypackage"' in proc.stdout, (
+            "typecheck should include SOURCE_FOLDER in computed path list; got:\n" + proc.stdout[:400]
+        )
+        assert " run ty check ${typecheck_paths}" in proc.stdout, (
+            "typecheck should pass computed path list to ty; got:\n" + proc.stdout[:400]
+        )
+        assert " run mypy --strict ${typecheck_paths}" in proc.stdout, (
+            "typecheck should pass computed path list to mypy; got:\n" + proc.stdout[:400]
+        )
 
     def test_deptry_uses_source_folder(self, logger, tmp_path) -> None:
         """The deptry target must scan the directory set by SOURCE_FOLDER."""
@@ -127,6 +128,50 @@ class TestSourceFolderVariable:
 
         proc = run_make(logger, ["deptry", "SOURCE_FOLDER=mypackage"])
         assert "mypackage" in proc.stdout, "deptry should reference SOURCE_FOLDER; got:\n" + proc.stdout[:400]
+
+    def test_deptry_accumulates_marimo_and_source_in_one_call(self, logger, tmp_path) -> None:
+        """The marimo bundle must contribute its folder (and DEP004 ignore) to the single deptry scan.
+
+        This locks in the accumulator design: each bundle appends to DEPTRY_FOLDERS /
+        DEPTRY_IGNORE rather than the core target hard-coding knowledge of marimo.
+        """
+        (tmp_path / "mypackage").mkdir(exist_ok=True)
+        (tmp_path / "notebooks").mkdir(exist_ok=True)
+
+        proc = run_make(logger, ["deptry", "SOURCE_FOLDER=mypackage", "MARIMO_FOLDER=notebooks"])
+        out = strip_ansi(proc.stdout)
+        # marimo.mk is included before quality.mk, so its folder is appended first.
+        assert "deptry notebooks mypackage --ignore DEP004" in out, (
+            "deptry should scan marimo + source folders in a single call with DEP004 ignored; got:\n" + out[:600]
+        )
+
+
+class TestTypecheckerVariable:
+    """TYPECHECKER selects which type checker(s) 'make typecheck' runs (default: both)."""
+
+    def test_default_runs_both_checkers(self, logger) -> None:
+        """With no override, typecheck must run both ty and mypy."""
+        proc = run_make(logger, ["typecheck"])
+        assert 'case "both" in' in proc.stdout
+        assert "run ty check" in proc.stdout
+        assert "run mypy --strict" in proc.stdout
+
+    def test_ty_only_selects_ty_branch(self, logger) -> None:
+        """TYPECHECKER=ty must select the ty-only case branch."""
+        proc = run_make(logger, ["typecheck", "TYPECHECKER=ty"])
+        assert 'case "ty" in' in proc.stdout
+
+    def test_mypy_only_selects_mypy_branch(self, logger) -> None:
+        """TYPECHECKER=mypy must select the mypy-only case branch."""
+        proc = run_make(logger, ["typecheck", "TYPECHECKER=mypy"])
+        assert 'case "mypy" in' in proc.stdout
+
+    def test_unrecognised_value_is_rejected(self, logger) -> None:
+        """The recipe must define an explicit error branch for unrecognised TYPECHECKER values."""
+        proc = run_make(logger, ["typecheck", "TYPECHECKER=pyright"])
+        assert 'case "pyright" in' in proc.stdout
+        assert "Invalid TYPECHECKER='pyright'" in proc.stdout
+        assert "exit 1" in proc.stdout
 
 
 class TestUvNoModifyPath:

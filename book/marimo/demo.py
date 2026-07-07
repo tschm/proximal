@@ -28,7 +28,7 @@ with app.setup:
 
 
 @app.cell
-def _():
+def _() -> None:
     mo.md(
         r"""
     # Proximal Gradient Method for Simplex-Constrained Optimization
@@ -46,7 +46,7 @@ def _():
 
 
 @app.cell
-def _():
+def _() -> None:
     mo.md(
         r"""
     ## 1. Projection onto the Probability Simplex
@@ -64,7 +64,7 @@ def _():
 
 
 @app.cell
-def _():
+def _() -> tuple[np.ndarray, np.ndarray]:
     # Create a random vector
     _rng = np.random.default_rng(42)
     x = _rng.normal(size=5)
@@ -85,7 +85,7 @@ def _():
 
 
 @app.cell
-def _(x, x_proj):
+def _(x: np.ndarray, x_proj: np.ndarray) -> None:
     # Visualize the projection
     _fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -107,7 +107,7 @@ def _(x, x_proj):
 
 
 @app.cell
-def _():
+def _() -> None:
     mo.md(
         r"""
     Notice how the projection:
@@ -129,7 +129,7 @@ def _():
 
 
 @app.cell
-def _():
+def _() -> None:
     # Create a simple problem
     a = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     b = np.array([1, 2, 3])
@@ -152,7 +152,7 @@ def _():
 
 
 @app.cell
-def _():
+def _() -> None:
     mo.md(
         r"""
     ## Conclusion
