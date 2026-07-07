@@ -64,7 +64,7 @@ def _() -> None:
 
 
 @app.cell
-def _():
+def _() -> tuple[np.ndarray, np.ndarray]:
     # Create a random vector
     _rng = np.random.default_rng(42)
     x = _rng.normal(size=5)
@@ -85,7 +85,7 @@ def _():
 
 
 @app.cell
-def _(x, x_proj) -> None:
+def _(x: np.ndarray, x_proj: np.ndarray) -> None:
     # Visualize the projection
     _fig, ax = plt.subplots(figsize=(10, 6))
 
