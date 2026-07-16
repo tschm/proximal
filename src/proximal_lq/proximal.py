@@ -84,6 +84,7 @@ def prox_gradient(
     vec: NDArray[np.floating],
     eps_rel: float = 1e-6,
     max_iter: int = 1000,
+    seed: int | None = None,
 ) -> NDArray[np.floating]:
     """Perform proximal gradient descent to solve a constrained optimization problem.
 
@@ -102,16 +103,28 @@ def prox_gradient(
         problem.
     vec : NDArray[np.floating]
         A vector of shape (n_samples,) used in the optimization problem.
+        Its length must equal ``mat.shape[0]``.
     eps_rel : float, optional
         The relative error threshold for stopping criteria. Default is 1e-6.
     max_iter : int, optional
         The maximum number of iterations for the algorithm. Default is 1000.
+    seed : int | None, optional
+        Seed for the random number generator used to initialise the primal
+        variable. Pass an integer for reproducible results (the problem is
+        convex, so the optimum is independent of the seed). Default is None,
+        which draws a fresh, unseeded initialisation.
 
     Returns:
     -------
     NDArray[np.floating]
         The solution vector of shape (n_features,) obtained after the
         optimization process.
+
+    Raises:
+    ------
+    ValueError
+        If ``mat`` is not a 2-D array, ``vec`` is not a 1-D array, either input
+        is empty, or ``vec.shape[0]`` does not match ``mat.shape[0]``.
 
     Examples:
     --------
@@ -123,7 +136,23 @@ def prox_gradient(
     True
 
     """
-    rng = np.random.default_rng()
+    if mat.ndim != 2:
+        msg = f"mat must be a 2-D array (n_samples, n_features), got {mat.ndim}-D with shape {mat.shape}"
+        raise ValueError(msg)
+    if vec.ndim != 1:
+        msg = f"vec must be a 1-D array (n_samples,), got {vec.ndim}-D with shape {vec.shape}"
+        raise ValueError(msg)
+    if mat.size == 0 or vec.size == 0:
+        msg = f"mat and vec must be non-empty, got shapes {mat.shape} and {vec.shape}"
+        raise ValueError(msg)
+    if vec.shape[0] != mat.shape[0]:
+        msg = (
+            f"vec length ({vec.shape[0]}) must match mat.shape[0] ({mat.shape[0]}); "
+            f"vec has one entry per row (sample) of mat"
+        )
+        raise ValueError(msg)
+
+    rng = np.random.default_rng(seed)
     prim_var: NDArray[np.floating] = np.asarray(rng.standard_normal(size=mat.shape[1]))
     sym_mat = mat.T @ mat
     lip = np.linalg.norm(sym_mat, 2)  # Lipschitz constant of the gradient
