@@ -66,6 +66,65 @@ print(np.round(result, 4))  # Optimal weights that satisfy the constraints
 [0.5 0.5]
 ```
 
+## API Reference
+
+The public API is exported directly from `proximal_lq`:
+
+```python +RHIZA_SKIP
+from proximal_lq import proj_simplex, prox_gradient
+```
+
+### `proj_simplex(vec, rad=1.0)`
+
+```python +RHIZA_SKIP
+proj_simplex(vec: NDArray[np.floating], rad: float = 1.0) -> NDArray[np.floating]
+```
+
+Euclidean projection of `vec` onto the probability simplex
+`{x : x >= 0, sum(x) = rad}`, using the algorithm of Duchi et al. (2008).
+
+- **`vec`** – input vector to project (must be non-empty).
+- **`rad`** – radius of the simplex; the result sums to this value (default `1.0`).
+- **Raises** `ValueError` if `vec` is empty.
+
+```python
+import numpy as np
+from proximal_lq import proj_simplex
+
+weights = proj_simplex(np.array([0.3, 0.9, -0.2, 0.5]))
+print(np.round(weights, 4))
+```
+
+```result
+[0.0667 0.6667 0.     0.2667]
+```
+
+### `prox_gradient(mat, vec, eps_rel=1e-6, max_iter=1000, seed=None)`
+
+```python +RHIZA_SKIP
+prox_gradient(
+    mat: NDArray[np.floating],
+    vec: NDArray[np.floating],
+    eps_rel: float = 1e-6,
+    max_iter: int = 1000,
+    seed: int | None = None,
+) -> NDArray[np.floating]
+```
+
+Solve `minimize 0.5 ||mat @ x - vec||^2` subject to `x >= 0, sum(x) = 1` via
+proximal gradient descent with simplex projection.
+
+- **`mat`** – matrix of shape `(n_samples, n_features)`.
+- **`vec`** – vector of shape `(n_samples,)`; its length must equal `mat.shape[0]`.
+- **`eps_rel`** – relative stopping tolerance (default `1e-6`).
+- **`max_iter`** – maximum number of iterations (default `1000`).
+- **`seed`** – optional seed for the random initialisation; pass an integer for
+  reproducible results (the problem is convex, so the optimum is independent of
+  the seed).
+- **Returns** the solution vector of shape `(n_features,)`.
+- **Raises** `ValueError` if `mat` is not 2-D, `vec` is not 1-D, either input is
+  empty, or `vec.shape[0]` does not match `mat.shape[0]`.
+
 ## Features
 
 - **Fast simplex projection** using the algorithm from
