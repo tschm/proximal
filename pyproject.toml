@@ -50,7 +50,11 @@ dev = [
 test = [
     "pytest>=8.0",
     "pytest-cov>=4.0",
-    "hypothesis>=6.0",
+    # 6.112 is the floor that works on the full Python matrix: hypothesis < ~6.29
+    # calls the removed importlib.metadata EntryPoints.get() and crashes on 3.12+
+    # (surfaced by the lowest-direct CI resolution). hypothesis is test-only, so
+    # a modern floor costs library consumers nothing.
+    "hypothesis>=6.112.0",
 ]
 lint = [
     "ruff>=0.9.0",

@@ -1372,7 +1372,7 @@ dev = [
 ]
 lint = [{ name = "ruff", specifier = ">=0.9.0" }]
 test = [
-    { name = "hypothesis", specifier = ">=6.0" },
+    { name = "hypothesis", specifier = ">=6.112.0" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "pytest-cov", specifier = ">=4.0" },
 ]
