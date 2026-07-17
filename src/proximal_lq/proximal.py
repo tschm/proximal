@@ -79,6 +79,82 @@ def proj_simplex(
     return result
 
 
+def _validate_inputs(mat: NDArray[np.floating], vec: NDArray[np.floating]) -> None:
+    """Validate the shapes of ``mat`` and ``vec`` for :func:`prox_gradient`.
+
+    Parameters
+    ----------
+    mat : NDArray[np.floating]
+        The matrix argument; must be a non-empty 2-D array.
+    vec : NDArray[np.floating]
+        The vector argument; must be a non-empty 1-D array whose length matches
+        ``mat.shape[0]``.
+
+    Raises:
+    ------
+    ValueError
+        If ``mat`` is not 2-D, ``vec`` is not 1-D, either input is empty, or
+        ``vec.shape[0]`` does not match ``mat.shape[0]``.
+
+    """
+    if mat.ndim != 2:
+        msg = f"mat must be a 2-D array (n_samples, n_features), got {mat.ndim}-D with shape {mat.shape}"
+        raise ValueError(msg)
+    if vec.ndim != 1:
+        msg = f"vec must be a 1-D array (n_samples,), got {vec.ndim}-D with shape {vec.shape}"
+        raise ValueError(msg)
+    if min(mat.size, vec.size) == 0:
+        msg = f"mat and vec must be non-empty, got shapes {mat.shape} and {vec.shape}"
+        raise ValueError(msg)
+    if vec.shape[0] != mat.shape[0]:
+        msg = (
+            f"vec length ({vec.shape[0]}) must match mat.shape[0] ({mat.shape[0]}); "
+            f"vec has one entry per row (sample) of mat"
+        )
+        raise ValueError(msg)
+
+
+def _iterate(
+    prim_var: NDArray[np.floating],
+    sym_mat: NDArray[np.floating],
+    out_prod: NDArray[np.floating],
+    step: float,
+    eps_rel: float,
+    max_iter: int,
+) -> NDArray[np.floating]:
+    """Run the projected-gradient iteration loop until convergence.
+
+    Parameters
+    ----------
+    prim_var : NDArray[np.floating]
+        The initial primal variable.
+    sym_mat : NDArray[np.floating]
+        The Gram matrix ``mat.T @ mat``.
+    out_prod : NDArray[np.floating]
+        The vector ``mat.T @ vec``.
+    step : float
+        The gradient step size.
+    eps_rel : float
+        The relative error threshold for the stopping criterion.
+    max_iter : int
+        The maximum number of iterations.
+
+    Returns:
+    -------
+    NDArray[np.floating]
+        The primal variable after convergence or reaching ``max_iter``.
+
+    """
+    err_rel = eps_rel + 1
+    for _ in range(max_iter):
+        if err_rel <= eps_rel:
+            break
+        prim_var_new = proj_simplex(prim_var - step * (sym_mat @ prim_var - out_prod))
+        err_rel = float(np.linalg.norm(prim_var - prim_var_new, 2))
+        prim_var = prim_var_new.copy()
+    return prim_var
+
+
 def prox_gradient(
     mat: NDArray[np.floating],
     vec: NDArray[np.floating],
@@ -136,34 +212,13 @@ def prox_gradient(
     True
 
     """
-    if mat.ndim != 2:
-        msg = f"mat must be a 2-D array (n_samples, n_features), got {mat.ndim}-D with shape {mat.shape}"
-        raise ValueError(msg)
-    if vec.ndim != 1:
-        msg = f"vec must be a 1-D array (n_samples,), got {vec.ndim}-D with shape {vec.shape}"
-        raise ValueError(msg)
-    if mat.size == 0 or vec.size == 0:
-        msg = f"mat and vec must be non-empty, got shapes {mat.shape} and {vec.shape}"
-        raise ValueError(msg)
-    if vec.shape[0] != mat.shape[0]:
-        msg = (
-            f"vec length ({vec.shape[0]}) must match mat.shape[0] ({mat.shape[0]}); "
-            f"vec has one entry per row (sample) of mat"
-        )
-        raise ValueError(msg)
+    _validate_inputs(mat, vec)
 
     rng = np.random.default_rng(seed)
     prim_var: NDArray[np.floating] = np.asarray(rng.standard_normal(size=mat.shape[1]))
     sym_mat = mat.T @ mat
     lip = np.linalg.norm(sym_mat, 2)  # Lipschitz constant of the gradient
-    step = 0.5 / lip if abs(lip) > 1e-15 else 1.0
+    step = float(0.5 / lip) if abs(lip) > 1e-15 else 1.0
 
     out_prod = mat.T @ vec
-    ite = 0
-    err_rel = eps_rel + 1
-    while err_rel > eps_rel and ite < max_iter:
-        prim_var_new = proj_simplex(prim_var - step * (sym_mat @ prim_var - out_prod))
-        err_rel = float(np.linalg.norm(prim_var - prim_var_new, 2))
-        prim_var = prim_var_new.copy()
-        ite += 1
-    return prim_var
+    return _iterate(prim_var, sym_mat, out_prod, step, eps_rel, max_iter)
