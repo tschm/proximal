@@ -47,7 +47,7 @@ dev = [
     "plotly>=6.5",
 ]
 test = [
-    "pytest>=8.0",
+    "pytest>=9.0.3",
     "pytest-cov>=4.0",
     # 6.112 is the floor that works on the full Python matrix: hypothesis < ~6.29
     # calls the removed importlib.metadata EntryPoints.get() and crashes on 3.12+
