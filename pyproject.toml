@@ -56,7 +56,12 @@ test = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+# hatchling 1.32.0 emits Metadata-Version: 2.5, which the twine pinned inside
+# hynek/build-and-inspect-python-package v2.18.0 (used by the rhiza CI
+# generate-matrix job) rejects: "'2.5' is not a valid metadata version".
+# Current twine/packaging accept 2.5, so drop this bound once the CI action
+# ships a newer twine.
+requires = ["hatchling<1.32"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
