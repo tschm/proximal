@@ -52,7 +52,7 @@ test = [
     # calls the removed importlib.metadata EntryPoints.get() and crashes on 3.12+
     # (surfaced by the lowest-direct CI resolution). hypothesis is test-only, so
     # a modern floor costs library consumers nothing.
-    "hypothesis>=6.165.2",
+    "hypothesis>=6.165.9",
 ]
 
 [build-system]
