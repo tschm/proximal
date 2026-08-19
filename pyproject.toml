@@ -72,3 +72,41 @@ matplotlib = "matplotlib"
 pandas = "pandas"
 plotly = "plotly"
 pytest = "pytest"
+
+[tool.bumpversion]
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(?:[-]?(?P<release>[a-z]+)[\\.]?(?P<pre_n>\\d+))?(?:\\+build\\.(?P<build_n>\\d+))?"
+serialize = ["{major}.{minor}.{patch}-{release}.{pre_n}+build.{build_n}", "{major}.{minor}.{patch}+build.{build_n}", "{major}.{minor}.{patch}-{release}.{pre_n}", "{major}.{minor}.{patch}"]
+search = "{current_version}"
+replace = "{new_version}"
+regex = false
+ignore_missing_version = false
+ignore_missing_files = false
+# /rhiza:release commits and tags itself so the changelog lands in the bump commit.
+tag = false
+sign_tags = false
+tag_name = "v{new_version}"
+tag_message = "Bump version: {current_version} → {new_version}"
+allow_dirty = false
+commit = false
+message = "Chore: bump version {current_version} → {new_version}"
+
+[tool.bumpversion.parts.release]
+optional_value = "prod"
+values = [
+    "dev",
+    "alpha",
+    "a",  # PEP 440 short form for alpha
+    "beta",
+    "b",  # PEP 440 short form for beta
+    "rc",
+    "prod"
+]
+
+# Anchored to the [project] table on purpose. `search`/`replace` are applied to
+# EVERY occurrence in the file, so the obvious `version = "{current_version}"`
+# also rewrites any [tool.*] table that happens to share the current number.
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+regex = true
+search = '(?ms)^\[project\]((?:(?!^\[)[\s\S])*?)^version = "{current_version}"'
+replace = '[project]\1version = "{new_version}"'
