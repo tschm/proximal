@@ -38,7 +38,7 @@ make book       # Build documentation
 - **Testing**: pytest with coverage
 - **Linting/Formatting**: ruff (line length 120, Google-style docstrings)
 - **Build system**: hatchling
-- **Runtime dependency**: NumPy >=2.0.0, Python >=3.11
+- **Runtime dependency**: NumPy >=2.4.6, Python >=3.11
 
 ## Workflow
 
