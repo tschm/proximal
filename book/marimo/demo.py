@@ -5,7 +5,7 @@
 # dependencies = [
 #     "matplotlib",
 #     "marimo==0.18.4",
-#     "numpy==2.3.5",
+#     "numpy==2.4.6",
 #     "pandas",
 #     "proximal-lq",
 # ]
