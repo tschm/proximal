@@ -65,6 +65,71 @@ packages = ["src/proximal_lq"]
 [tool.marimo.runtime]
 pythonpath = ["src"]
 
+# Settings recovered from the make layer that rhiza v1.4.0 retired. Until v1.3.4 these
+# lived in `Makefile`, `.rhiza/rhiza.mk` and `.rhiza/make.d/*.mk`; the v1.4.2 sync deletes
+# all of those, and rhiza-task's own defaults are NOT the same values -- so anything not
+# restated here silently reverts. Only entries that differ from the CLI default belong in
+# this table; the "not set, on purpose" notes at the end record the ones deliberately left
+# out, so they do not get re-added by the next person to read this file.
+#
+# Defaults below were read from `uvx rhiza-task@0.3.1 print <setting>`. 0.3.1 is the pin in
+# `rhiza_ci.yml@v1.4.2`, which every gate step uses regardless of what a consumer sets in
+# RHIZA_TASK -- so it, not floating latest, is the version these comparisons are against.
+[tool.rhiza-task]
+# was: MARIMO_FOLDER = book/marimo   (Makefile, above the rhiza.mk include)
+# CLI default: docs/notebooks
+# Without this, every marimo path points at a folder that does not exist here: the `marimo`
+# and `marimo-validate` tasks silently skip instead of validating the notebooks, `book`
+# builds without them, and -- because rhiza-task only adds deptry's DEP004 exemption when
+# the marimo folder actually exists -- `deps` starts failing on the notebook-only
+# dependencies in the dev group. It also has to agree with the folder
+# .github/workflows/rhiza_marimo.yml discovers.
+marimo-folder = "book/marimo"
+
+# was: TYPECHECKER ?= both   (.rhiza/make.d/python.mk)
+# CLI default: ty
+# Dropping this would stop running mypy --strict entirely and leave only ty. Note the CLI
+# is also stricter than the make layer was: the old shell `case` let mypy's exit status be
+# the one that counted, so a ty failure could pass the gate. Both must now pass.
+typechecker = "both"
+
+# was: RHIZA_CHECKS_VERSION ?= 0.2.1, consumed as `--with 'pytest-rhiza==0.2.1'`
+#      (.rhiza/make.d/quality.mk)
+# CLI default: pytest-rhiza @ git+https://github.com/Jebel-Quant/pytest-rhiza@v0.2.0
+# Leaving this unset is a silent *downgrade* to v0.2.0, and swaps a PyPI pin for a git
+# checkout. This repo carried a real pin (it is past the v1.3.3 repos that had none and ran
+# the in-tree .rhiza/tests/ instead -- that folder is already gone here), so the pin is a
+# preserved value rather than an upgrade decision.
+pytest-rhiza = "pytest-rhiza==0.2.1"
+
+# Not set, on purpose -- each of these was in the make layer but matches the 0.3.1 default,
+# and naming a setting *replaces* the default rather than adding to it, so restating one is
+# how it later gets edited into a regression:
+#   coverage-fail-under     python.mk had `?= 90`; the default is 90. (There is no
+#                           [tool.coverage.report] fail-under here to conflict with -- and
+#                           note it would lose anyway, since the gate passes
+#                           --cov-fail-under on the command line.)
+#   mkdocs-extra-packages   Makefile had `--with 'mkdocstrings[python]'`, which is exactly
+#                           the default list. Restating it is the trap: this key REPLACES
+#                           the list, so adding a package here without repeating
+#                           mkdocstrings[python] drops it from the book build.
+#   ci-os-matrix            rhiza.mk had `?= ["ubuntu-latest"]`; the default is
+#                           ubuntu-latest. This repo is single-OS, so no matrix is lost.
+#   license-ignore-packages marimo.mk appended `docutils`, but rhiza-task derives that
+#                           itself whenever marimo is in the task registry. Nothing else
+#                           was ignored, so the `pip-licenses --fail-on=GPL;LGPL;AGPL` gate
+#                           needs no exemption for this project.
+#   deptry-ignore           marimo.mk appended `--ignore DEP004`; rhiza-task adds it when
+#                           the marimo tasks are registered and the folder exists -- see
+#                           marimo-folder above, which is what makes that condition true.
+#   rhiza-checks            the make layer accumulated test_readme, test_release_tags,
+#                           test_readme_validation, test_pyproject and test_docstrings via
+#                           `+=` across three fragments. rhiza-task derives that exact set
+#                           from layers = ["python"], so the accumulator is redundant.
+#   python-version          .python-version (3.12) wins over any value here, by design.
+# Dropped with no equivalent, and nothing depends on them: PROJECT_NAME_EXTRA and LOG_LEVEL
+# (cosmetic, from the template's custom-env.mk example).
+
 [tool.deptry.package_module_name_map]
 numpy = "numpy"
 marimo = "marimo"

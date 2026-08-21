@@ -1,8 +1,31 @@
 repository: "jebel-quant/rhiza"
-ref: "v1.3.4"
+ref: "v1.4.2"
 
 profiles:
   - github-project
 
 templates:
   - legal
+
+# NOTE: exclude entries are matched against DESTINATION paths -- where the file lands in
+# this repo -- not against clone-relative paths inside the template. A clone-relative
+# spelling such as bundles/github/.github/workflows/... matches nothing, silently.
+#
+# No entries are needed for the retired make layer: v1.4.2 ships no Makefile,
+# .rhiza/rhiza.mk, .rhiza/make.d, .rhiza/.env or .rhiza/.gitignore in any bundle, so
+# there is nothing to exclude.
+exclude:
+  # Mutation testing is opt-in via the MUTATION_ENABLED repository variable, which is not
+  # set here (`gh variable list` returns []). The gate lives in this caller, so the
+  # workflow never starts. Caveat: because the file is deleted as well as excluded,
+  # re-enabling mutation means restoring this caller, not just setting the variable.
+  - .github/workflows/rhiza_mutation.yml
+  # Fuzzing is opt-in via FUZZING_ENABLED, also unset here. Its gate sits inside the
+  # reusable workflow rather than the caller, so while unopted this file started on every
+  # PR purely to skip. Same re-enable caveat as mutation above.
+  - .github/workflows/rhiza_fuzzing.yml
+  # Contributor-facing GitHub forms and meta docs are this repo's own; the template's
+  # generic versions are not wanted here.
+  - .github/CONFIG.md
+  - .github/DISCUSSION_TEMPLATE
+  - .github/ISSUE_TEMPLATE
