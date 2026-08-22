@@ -15,6 +15,10 @@ templates:
 # .rhiza/rhiza.mk, .rhiza/make.d, .rhiza/.env or .rhiza/.gitignore in any bundle, so
 # there is nothing to exclude.
 exclude:
+  # SECURITY.md makes factual claims about THIS repo's security posture (which scanners,
+  # which release protections). Only the repo knows which are true -- the template shipped a
+  # fuzzing claim that was false here -- so the file is owned here, not template-managed.
+  - SECURITY.md
   # Mutation testing is opt-in via the MUTATION_ENABLED repository variable, which is not
   # set here (`gh variable list` returns []). The gate lives in this caller, so the
   # workflow never starts. Caveat: because the file is deleted as well as excluded,

@@ -42,7 +42,6 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 - **CodeQL**: Automated code scanning for Python and GitHub Actions
 - **Bandit**: Python security linter integrated in CI and pre-commit
 - **Secret Scanning**: GitHub secret scanning enabled on this repository
-- **Fuzzing**: ClusterFuzzLite exercises Atheris-based fuzz targets on pull requests and scheduled batch runs
 
 When using `proximal-lq`:
 
