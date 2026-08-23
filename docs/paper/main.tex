@@ -8,12 +8,31 @@
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{microtype}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
 \usepackage[round]{natbib}
 \usepackage[hidelinks]{hyperref}
 
 \newcommand{\code}[1]{\texttt{#1}}
+
+% A numbered, ruled algorithm block in base LaTeX. The `algorithm` and
+% `algorithmicx` packages are not in the TeX Live subset the paper workflow
+% installs (texlive-latex-extra ships neither; they sit in texlive-science),
+% so the environment is defined here rather than pulled in.
+\newcounter{algo}
+\newenvironment{algobox}[2]{%
+  \par\addvspace{\medskipamount}%
+  \refstepcounter{algo}\label{#2}%
+  \noindent\rule{\linewidth}{0.8pt}\par\nobreak\vspace{2pt}%
+  \noindent\textbf{Algorithm \thealgo.} #1\par\nobreak\vspace{2pt}%
+  \noindent\rule{\linewidth}{0.4pt}\par\nobreak\vspace{2pt}%
+  \begin{list}{\arabic{algoline}:}{%
+    \usecounter{algoline}%
+    \setlength{\leftmargin}{2.2em}\setlength{\labelwidth}{1.6em}%
+    \setlength{\itemsep}{1pt}\setlength{\parsep}{0pt}\setlength{\topsep}{2pt}}%
+}{%
+  \end{list}\nobreak\vspace{2pt}%
+  \noindent\rule{\linewidth}{0.8pt}\par\addvspace{\medskipamount}%
+}
+\newcounter{algoline}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \newcommand{\simplex}{\Delta}
 \newcommand{\R}{\mathbb{R}}
@@ -152,18 +171,14 @@ coordinate, and the non-negativity multipliers are active exactly where
 $v_i \le \theta$. The only work is finding $\theta$, and sorting makes it
 explicit.
 
-\begin{algorithm}[t]
-\caption{Simplex projection \citep{duchi2008}}
-\label{alg:proj}
-\begin{algorithmic}[1]
-\Require $v \in \R^n$, radius $s > 0$
-\State $\mu \gets \operatorname{sort}(v)$ in decreasing order
-\State $\theta_j \gets \bigl(\sum_{i \le j} \mu_i - s\bigr) / j$
-  \Comment{running mean of the top $j$, offset by $s$}
-\State $\rho \gets \max \{ j : \mu_j > \theta_j \}$
-\State \Return $x_i = \max(v_i - \theta_\rho, 0)$ for each $i$
-\end{algorithmic}
-\end{algorithm}
+\begin{algobox}{Simplex projection \citep{duchi2008}}{alg:proj}
+\item[] \textbf{Input:} $v \in \R^n$, radius $s > 0$.
+\item $\mu \gets \operatorname{sort}(v)$, in decreasing order.
+\item $\theta_j \gets \bigl(\sum_{i \le j} \mu_i - s\bigr) / j$ for each $j$ ---
+      the running mean of the top $j$ entries, offset by $s$.
+\item $\rho \gets \max \{ j : \mu_j > \theta_j \}$.
+\item Return $x_i = \max(v_i - \theta_\rho, 0)$ for each $i$.
+\end{algobox}
 
 Algorithm~\ref{alg:proj} is exact --- not an approximation or an inner iteration
 --- and costs $O(n \log n)$, dominated by the sort, with $O(n)$ extra space. The
