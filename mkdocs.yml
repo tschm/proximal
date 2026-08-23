@@ -10,6 +10,7 @@ copyright: Copyright &copy; 2024–2026 Thomas Schmelzer
 
 nav:
   - Home: index.md
+  - Paper: paper/main.pdf
   - Development:
     - Guide: DEVELOPMENT.md
     - Marimo Notebooks: development/MARIMO.md
