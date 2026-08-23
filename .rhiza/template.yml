@@ -7,13 +7,6 @@ profiles:
 templates:
   - legal
 
-# NOTE: exclude entries are matched against DESTINATION paths -- where the file lands in
-# this repo -- not against clone-relative paths inside the template. A clone-relative
-# spelling such as bundles/github/.github/workflows/... matches nothing, silently.
-#
-# The Makefile is template-owned again as of v1.5.0 ("ship the Makefile front door as
-# core's"), so it is listed in the lock's files and must not be hand-edited here. The
-# rest of the old make layer (.rhiza/rhiza.mk, .rhiza/make.d, .rhiza/.env) stays retired.
 exclude:
   # SECURITY.md makes factual claims about THIS repo's security posture (which scanners,
   # which release protections). Only the repo knows which are true, so the file is owned
