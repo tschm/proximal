@@ -1,0 +1,421 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.6cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage[round]{natbib}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+% A numbered, ruled algorithm block in base LaTeX. The `algorithm` and
+% `algorithmicx` packages are not in the TeX Live subset the paper workflow
+% installs (texlive-latex-extra ships neither; they sit in texlive-science),
+% so the environment is defined here rather than pulled in.
+\newcounter{algo}
+\newenvironment{algobox}[2]{%
+  \par\addvspace{\medskipamount}%
+  \refstepcounter{algo}\label{#2}%
+  \noindent\rule{\linewidth}{0.8pt}\par\nobreak\vspace{2pt}%
+  \noindent\textbf{Algorithm \thealgo.} #1\par\nobreak\vspace{2pt}%
+  \noindent\rule{\linewidth}{0.4pt}\par\nobreak\vspace{2pt}%
+  \begin{list}{\arabic{algoline}:}{%
+    \usecounter{algoline}%
+    \setlength{\leftmargin}{2.2em}\setlength{\labelwidth}{1.6em}%
+    \setlength{\itemsep}{1pt}\setlength{\parsep}{0pt}\setlength{\topsep}{2pt}}%
+}{%
+  \end{list}\nobreak\vspace{2pt}%
+  \noindent\rule{\linewidth}{0.8pt}\par\addvspace{\medskipamount}%
+}
+\newcounter{algoline}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\simplex}{\Delta}
+\newcommand{\R}{\mathbb{R}}
+
+\title{\code{proximal-lq}: Projected Gradient Descent for
+Simplex-Constrained Linear Least Squares}
+
+\author{Thomas Schmelzer\thanks{\url{https://github.com/tschm/proximal}}}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\code{proximal-lq} solves $\min_{x \in \simplex} \tfrac{1}{2}\|Ax-b\|_2^2$,
+where $\simplex$ is the probability simplex, with projected gradient descent and
+the exact $O(n \log n)$ simplex projection of \citet{duchi2008}. The package is
+two functions and roughly two hundred lines of NumPy; this paper states what
+they compute, the step size and stopping rule they actually use, and how they
+behave on the problems in the test suite. Three things are worth recording. The
+implementation takes $\tau = 1/(2L)$ rather than the $\tau = 1/L$ its own
+development notes specify --- both are convergent, but the shipped constant is
+half the classical one and costs roughly a factor of two in iterations. The
+parameter named \code{eps\_rel} is compared against an absolute quantity, the
+norm of the last step, so tolerances do not scale with problem size. And the
+portfolio fixture the test suite validates against solves a least-squares fit of
+$\Sigma x \approx \mathbf{1}$, which we show is a different portfolio from the
+long-only minimum-variance one --- variance $0.3087$ against $0.0421$ on the
+same covariance matrix --- a distinction easy to lose when the two are described
+with the same words. The solver itself converges in tens of iterations and
+reproduces the reference solution to $4.4 \times 10^{-6}$ in $\ell_1$.
+\end{abstract}
+
+\section{Introduction}
+
+Many estimation problems are least squares with the answer constrained to be a
+set of proportions: non-negative, summing to one. Long-only fully-invested
+portfolio weights \citep{markowitz1952} are the canonical example; mixture
+weights, non-negative sparse codes and discrete probability estimates are the
+same shape. Formally, with $A \in \R^{m \times n}$ and $b \in \R^m$,
+\begin{equation}
+  \min_{x \in \R^n} \; f(x) = \tfrac{1}{2} \| A x - b \|_2^2
+  \quad \text{subject to} \quad x \in \simplex,
+  \qquad
+  \simplex = \Bigl\{ x \in \R^n : x \ge 0, \; \textstyle\sum_i x_i = 1 \Bigr\}.
+  \label{eq:problem}
+\end{equation}
+
+This is a convex quadratic program, so a general-purpose solver
+\citep{diamond2016} will handle it. The reason not to use one is that
+Eq.~\eqref{eq:problem} has structure a general solver cannot exploit: the
+constraint set is simple enough that projecting onto it is cheaper than one
+gradient evaluation. Projection onto $\simplex$ costs $O(n \log n)$
+\citep{duchi2008}, against $O(n^2)$ for a single gradient once the Gram matrix
+is formed. When the projection is the cheap step, projected gradient descent is
+the natural method: no factorisations, no interior point, no KKT system, and an
+iterate that is feasible after the first step and stays feasible.
+
+\code{proximal-lq} is that method, kept deliberately small --- two public
+functions, NumPy \citep{harris2020} as the only dependency. This paper documents
+it precisely enough to be used with confidence, which includes being explicit
+about the three places where the shipped behaviour differs from what a reader of
+the documentation would assume.
+
+\section{Algorithm}
+
+\subsection{Proximal gradient descent}
+
+Write Eq.~\eqref{eq:problem} as the sum of a smooth part and an indicator,
+\begin{equation}
+  \min_x \; f(x) + g(x),
+  \qquad
+  f(x) = \tfrac{1}{2}\|Ax-b\|_2^2,
+  \qquad
+  g(x) = \iota_{\simplex}(x) =
+  \begin{cases}
+    0 & x \in \simplex \\
+    +\infty & \text{otherwise.}
+  \end{cases}
+\end{equation}
+The proximal gradient method --- forward--backward splitting
+\citep{parikh2014} --- iterates
+\begin{equation}
+  x^{k+1} = \operatorname{prox}_{\tau g}\bigl( x^k - \tau \nabla f(x^k) \bigr).
+  \label{eq:pg}
+\end{equation}
+For an indicator function the proximal operator is the Euclidean projection, so
+Eq.~\eqref{eq:pg} is exactly projected gradient descent,
+$x^{k+1} = P_{\simplex}(x^k - \tau \nabla f(x^k))$.
+
+The gradient is
+\begin{equation}
+  \nabla f(x) = A^{\top}(Ax - b) = G x - c,
+  \qquad G = A^{\top} A, \quad c = A^{\top} b,
+\end{equation}
+and $G$ and $c$ are formed once, outside the loop. Each iteration then costs one
+matrix--vector product, $O(n^2)$, plus one projection, $O(n \log n)$ --- the
+problem's $m$ enters only in the $O(mn^2)$ setup.
+
+\subsection{Step size}
+
+$\nabla f$ is Lipschitz with constant $L = \|A^{\top}A\|_2 = \sigma_{\max}(A)^2$,
+the spectral norm of the Gram matrix. Projected gradient descent converges for
+any fixed $\tau \in (0, 2/L)$, and the textbook choice $\tau = 1/L$ gives
+\begin{equation}
+  f(x^k) - f(x^{\star}) \;\le\; \frac{\|x^0 - x^{\star}\|_2^2}{2 \tau k}
+  \label{eq:rate}
+\end{equation}
+--- the $O(1/k)$ rate \citep{nesterov2004,beck2009}.
+
+The implementation uses
+\begin{equation}
+  \tau = \frac{1}{2L},
+  \label{eq:step}
+\end{equation}
+half the classical value, falling back to $\tau = 1$ when $L < 10^{-15}$ so that
+an all-but-zero $A$ does not divide by zero. This is a discrepancy worth
+recording: the package's development notes state $\tau = 1/L$, while the code
+takes $0.5/L$. Both lie inside the convergent range, so nothing is broken, but
+by Eq.~\eqref{eq:rate} the shipped constant roughly doubles the iteration count
+for a given accuracy --- a conservative choice, not a wrong one, and the numbers
+in Section~\ref{sec:results} are the numbers it produces.
+
+\subsection{Projection onto the simplex}
+
+The inner problem is
+\begin{equation}
+  P_{\simplex}(v) = \argmin_{x \ge 0, \, \sum_i x_i = s} \tfrac{1}{2}\|x - v\|_2^2 .
+\end{equation}
+Its solution is a soft threshold: $x_i = \max(v_i - \theta, 0)$ for the unique
+$\theta$ making the sum $s$. The KKT conditions give this immediately --- the
+multiplier on the equality constraint is the same scalar $\theta$ for every
+coordinate, and the non-negativity multipliers are active exactly where
+$v_i \le \theta$. The only work is finding $\theta$, and sorting makes it
+explicit.
+
+\begin{algobox}{Simplex projection \citep{duchi2008}}{alg:proj}
+\item[] \textbf{Input:} $v \in \R^n$, radius $s > 0$.
+\item $\mu \gets \operatorname{sort}(v)$, in decreasing order.
+\item $\theta_j \gets \bigl(\sum_{i \le j} \mu_i - s\bigr) / j$ for each $j$ ---
+      the running mean of the top $j$ entries, offset by $s$.
+\item $\rho \gets \max \{ j : \mu_j > \theta_j \}$.
+\item Return $x_i = \max(v_i - \theta_\rho, 0)$ for each $i$.
+\end{algobox}
+
+Algorithm~\ref{alg:proj} is exact --- not an approximation or an inner iteration
+--- and costs $O(n \log n)$, dominated by the sort, with $O(n)$ extra space. The
+implementation is a four-line vectorised transcription. Linear-time variants
+exist \citep{condat2016}; at the sizes this package targets the sort is not the
+bottleneck.
+
+Two properties inherited from exactness are worth naming, because the package's
+property tests assert them: the projection is idempotent, and it is the identity
+on points already in $\simplex$. A radius $s \neq 1$ is supported via the
+\code{rad} argument, which makes the same routine a projection onto a scaled
+simplex.
+
+\subsection{Stopping rule}
+
+The iteration halts when the step becomes small,
+\begin{equation}
+  \| x^{k} - x^{k+1} \|_2 \;\le\; \varepsilon,
+  \label{eq:stop}
+\end{equation}
+or when a cap of \code{max\_iter} iterations is reached. For a projected
+gradient iteration this is a defensible surrogate for optimality: $x$ is optimal
+precisely when it is a fixed point of Eq.~\eqref{eq:pg}, so a vanishing step
+means a vanishing fixed-point residual.
+
+Two caveats. First, the argument is named \code{eps\_rel} and documented as a
+``relative stopping tolerance'', but Eq.~\eqref{eq:stop} compares an absolute
+norm: nothing divides by $\|x^k\|$, by $n$, or by the objective. A tolerance
+therefore does not transfer between problems of different scale, and on a
+large-$n$ problem the same $\varepsilon$ is a stricter test per coordinate.
+Second, hitting \code{max\_iter} is silent --- the last iterate is returned with
+no flag, warning, or residual, so a caller who needs to know whether
+Eq.~\eqref{eq:stop} was met must re-measure it.
+
+\subsection{Initialisation}
+
+The primal variable starts from a standard normal draw, seeded via the
+\code{seed} argument. The draw is not in $\simplex$ --- it is not even
+non-negative --- which is harmless, because the first projection in
+Eq.~\eqref{eq:pg} maps it into $\simplex$ and every subsequent iterate stays
+there. The problem is convex, so the optimum does not depend on the seed; the
+seed exists to make the iteration count and any tie-breaking reproducible.
+
+\section{Numerical results}
+\label{sec:results}
+
+\subsection{Validation against a reference solution}
+
+The test suite pins the solver against the covariance matrix from the
+critical-line algorithm dataset of \citet{bailey2013} --- ten assets, condition
+number $9.21$ --- solving Eq.~\eqref{eq:problem} with $A = \Sigma$ and
+$b = \mathbf{1}$. The reference weight vector is reproduced to
+$\|x - x_{\mathrm{ref}}\|_1 = 4.4 \times 10^{-6}$ at the default tolerance, with
+seven of the ten weights driven to exactly zero.
+
+\begin{table}[t]
+\centering
+\caption{Iterations to satisfy Eq.~\eqref{eq:stop} on the ten-asset reference
+problem, at $\tau = 1/(2L)$.}
+\label{tab:iters}
+\begin{tabular}{lrr}
+\toprule
+$\varepsilon$ & Iterations & Final step norm \\
+\midrule
+$10^{-4}$ & $23$ & $8.69 \times 10^{-5}$ \\
+$10^{-6}$ & $36$ & $8.14 \times 10^{-7}$ \\
+$10^{-8}$ & $49$ & $7.62 \times 10^{-9}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:iters} shows the iteration count growing roughly linearly in the
+number of digits requested --- about $13$ iterations per two decades --- which is
+the geometric behaviour expected of a fixed-step projected gradient on a
+strongly convex problem, better than the $O(1/k)$ worst case of
+Eq.~\eqref{eq:rate}. The absolute counts are small: the whole solve is tens of
+matrix--vector products.
+
+\subsection{Scaling and sparsity}
+
+\begin{table}[t]
+\centering
+\caption{Random dense problems, $A \in \R^{2n \times n}$ with i.i.d.\ standard
+normal entries, default settings. \emph{Non-zeros} counts weights above
+$10^{-9}$.}
+\label{tab:scale}
+\begin{tabular}{lrrr}
+\toprule
+$n$ & Wall time & $\sum_i x_i$ & Non-zeros \\
+\midrule
+$10$   & $1.1$ ms  & $1.0000000000$ & $7$  \\
+$100$  & $1.8$ ms  & $1.0000000000$ & $29$ \\
+$1000$ & $51.5$ ms & $1.0000000000$ & $91$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:scale} reports single-threaded timings on a laptop; they are
+indicative, not a benchmark. Two things in it matter more than the times.
+
+The sum constraint holds to ten decimal places at every size, which is a
+consequence of the projection being exact rather than of the tolerance: every
+iterate is feasible, so feasibility does not degrade with the number of
+iterations the way it does for a penalty or an augmented-Lagrangian scheme.
+
+The solutions are sparse, and increasingly so in relative terms: $91$ non-zeros
+out of $1000$ variables. This is intrinsic to the geometry, not a regulariser
+someone added. The unconstrained least-squares solution of a random
+over-determined system has no zeros; projecting onto the simplex thresholds
+every coordinate below $\theta$ to exactly zero, and the optimum of a linear
+objective over a polytope sits at a face. Users should expect exact zeros, and
+should not read them as evidence of a sparsity penalty.
+
+\subsection{What the portfolio fixture is not}
+\label{sec:notgmv}
+
+The reference problem of Section~\ref{sec:results} substitutes a covariance
+matrix for $A$ and $\mathbf{1}$ for $b$, so it minimises
+$\tfrac{1}{2}\|\Sigma x - \mathbf{1}\|_2^2$ over the simplex. It is tempting ---
+and both the package's example script and its README invite the reading --- to
+call the result an optimal portfolio without qualification. It is worth being
+precise about which portfolio, because it is not the one most readers will
+assume.
+
+\begin{table}[t]
+\centering
+\caption{Two long-only fully-invested portfolios on the same ten-asset
+covariance matrix. Both are computed with this package's projection.}
+\label{tab:gmv}
+\begin{tabular}{lrr}
+\toprule
+& Objective solved & Variance $x^{\top}\Sigma x$ \\
+\midrule
+Least-squares fixture & $\tfrac{1}{2}\|\Sigma x - \mathbf{1}\|_2^2$ & $0.30865$ \\
+Minimum variance      & $\tfrac{1}{2} x^{\top}\Sigma x$             & $0.04212$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:gmv} puts the two side by side. The least-squares fixture yields a
+portfolio whose variance is more than seven times that of the minimum-variance
+portfolio on the same inputs, and the two weight vectors are far apart
+($\ell_1$ distance $1.81$ out of a maximum of $2$). Solving $\Sigma x \approx
+\mathbf{1}$ in least squares recovers a minimum-variance-like direction only
+when the unconstrained solution $\Sigma^{-1}\mathbf{1}$ happens to be feasible
+for the simplex --- that is, non-negative --- and here it is not, at which point
+the least-squares residual and the variance are simply different objectives with
+different minimisers.
+
+Nothing about the solver is at fault; this is a statement about the fixture. Note
+also that minimum variance is itself in reach of this package: with $A$ any
+matrix satisfying $A^{\top}A = \Sigma$ --- a Cholesky or symmetric square-root
+factor --- and $b = 0$, Eq.~\eqref{eq:problem} \emph{is} the long-only
+minimum-variance problem. The second row of Table~\ref{tab:gmv} was produced by
+iterating this package's own projection on $\nabla f(x) = \Sigma x$.
+
+\section{Limitations}
+
+\paragraph{No acceleration.} The iteration is plain proximal gradient. Nesterov
+momentum \citep{beck2009} would improve the worst-case rate from $O(1/k)$ to
+$O(1/k^2)$ at the cost of one extra vector of state, and the conservative step
+of Eq.~\eqref{eq:step} leaves further headroom: a backtracking line search would
+adapt $\tau$ to the local curvature instead of to a global bound. Neither is
+implemented.
+
+\paragraph{No convergence certificate.} The solver returns an array. It does not
+return the achieved residual, the iteration count, or whether
+Eq.~\eqref{eq:stop} was ever satisfied, and \code{max\_iter} is reached
+silently. For an automated pipeline this is the most consequential gap in the
+API: a non-converged answer is indistinguishable from a converged one.
+
+\paragraph{Dense and in-memory.} $G = A^{\top}A$ is formed explicitly, which is
+$O(n^2)$ storage and $O(mn^2)$ work regardless of any sparsity in $A$. For large
+sparse $A$ it would be cheaper to apply $A$ and $A^{\top}$ separately and never
+form $G$.
+
+\paragraph{Fixed problem shape.} Only Eq.~\eqref{eq:problem} is supported: one
+matrix, one vector, one simplex. There is no weighted norm, no regularisation
+term, no box constraints beyond the simplex, no equality constraints other than
+the sum, and no warm start --- each call begins from a fresh random point, so a
+sequence of related problems cannot reuse work.
+
+\section{Conclusion}
+
+Eq.~\eqref{eq:problem} is a problem where the specialised method is both simpler
+and faster than the general one, because the projection is exact and cheap. Two
+hundred lines of NumPy solve the ten-asset reference problem to $10^{-8}$ in $49$
+iterations and a thousand-variable random problem in $51$ ms, with feasibility
+holding to ten decimals at every iterate.
+
+Three things a user should carry away, all of them documentation issues rather
+than defects. The step size is $1/(2L)$, half the value the development notes
+state, so iteration counts are about twice the textbook figure. The tolerance
+called \code{eps\_rel} is absolute, so it does not transfer across problem
+scales. And the portfolio example solves a least-squares fit, not a
+minimum-variance problem --- the same solver will do minimum variance, but only
+if it is handed a square-root factor of the covariance matrix and $b=0$.
+
+\appendix
+
+\section{Reproducibility}
+\label{app:repro}
+
+All numbers were produced with \code{proximal-lq} 0.2.2 and the covariance
+matrix at \path{tests/proximal_lq/resources/CLA_Data.csv} (its first three
+rows are means and bounds and are skipped).
+
+\begin{verbatim}
+import numpy as np
+from proximal_lq import prox_gradient, proj_simplex
+
+S = np.genfromtxt("tests/proximal_lq/resources/CLA_Data.csv",
+                  delimiter=",", skip_header=1)[3:]
+
+x = prox_gradient(S, np.ones(10), seed=0)          # the fixture
+print(x.round(5), x @ S @ x)
+
+# minimum variance over the same simplex, via this package's projection
+L = np.linalg.norm(S, 2)
+y = np.ones(10) / 10
+for _ in range(200_000):
+    z = proj_simplex(y - (0.5 / L) * (S @ y))
+    if np.linalg.norm(z - y) < 1e-14:
+        y = z
+        break
+    y = z
+print(y.round(5), y @ S @ y)
+\end{verbatim}
+
+Iteration counts in Table~\ref{tab:iters} come from an instrumented copy of the
+library's loop --- same Gram matrix, same step $0.5/L$, same projection ---
+counting passes until Eq.~\eqref{eq:stop} holds. Timings in
+Table~\ref{tab:scale} are single runs of \code{prox\_gradient} on
+\code{rng.standard\_normal((2*n, n))} with \code{seed=0}, measured with
+\code{time.perf\_counter}.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
