@@ -13,8 +13,6 @@ nav:
   - Paper: paper/main.pdf
   - Development:
     - Guide: DEVELOPMENT.md
-    - Marimo Notebooks: development/MARIMO.md
-    - Tests: development/TESTS.md
   - Reports:
     - Test Report: reports/html-report/report.html
     - Coverage Report: reports/html-coverage/index.html
