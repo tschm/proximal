@@ -1,4 +1,4 @@
-# [proximal](/book)
+# [proximal](https://tschm.github.io/proximal/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -128,7 +128,7 @@ proximal gradient descent with simplex projection.
 ## Features
 
 - **Fast simplex projection** using the algorithm from
-  [Duchi et al. (2008)](https://stanford.edu/~jduchi/projects/DuchiShSiCh08.pdf)
+  [Duchi et al. (2008)](https://icml.cc/Conferences/2008/papers/361.pdf)
 - **Proximal gradient descent** solver with configurable convergence criteria
 - **Pure NumPy implementation** for high performance
 - **Type annotations** for better IDE support
@@ -153,7 +153,7 @@ make book    # Build documentation
 
 ## Documentation
 
-- [API Documentation](/book) - Generated API reference
+- [API Documentation](https://tschm.github.io/proximal/) - Generated API reference
 - [Development Guide](docs/DEVELOPMENT.md) - Algorithm details and implementation notes
 - [Examples](examples/) - Usage examples including portfolio optimization
 
@@ -167,7 +167,7 @@ Contributions are most welcome!
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+See [CONTRIBUTING.md](.rhiza/CONTRIBUTING.md) for detailed guidelines.
 
 ## References
 
