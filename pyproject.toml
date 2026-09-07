@@ -1,6 +1,8 @@
 [project]
 name = "proximal-lq"
-version = "0.2.2"
+# Derived from the git tag by hatch-vcs (see [tool.hatch.version]) rather than written
+# here, so the tag is the single source of truth and no commit can disagree with it.
+dynamic = ["version"]
 description = "Fast solver for simplex-constrained linear least squares optimization"
 authors = [{name = "Thomas Schmelzer", email = "thomas.schmelzer@gmail.com"}]
 readme = "README.md"
@@ -56,11 +58,23 @@ test = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/proximal_lq"]
+
+[tool.hatch.version]
+# Resolves [project].dynamic = ["version"] from `git describe`. Tags are vX.Y.Z and
+# hatch-vcs strips the leading "v" by default, so v0.2.2 builds 0.2.2; a commit off the
+# tag builds a PEP 440 dev version (0.2.3.dev113+g<sha>).
+#
+# This makes the build history-dependent: a shallow clone that cannot see the tag does
+# not fail, it silently builds 0.1.dev1+g<sha>. Every checkout in rhiza_release.yml uses
+# fetch-depth: 0, and its "Verify built distribution matches the tag" step parses the
+# filename in dist/ and fails the release unless it carries the tag -- nothing earlier
+# can catch a wrong derived version.
+source = "vcs"
 
 [tool.marimo.runtime]
 pythonpath = ["src"]
@@ -100,7 +114,13 @@ typechecker = "both"
 # checkout. This repo carried a real pin (it is past the v1.3.3 repos that had none and ran
 # the in-tree .rhiza/tests/ instead -- that folder is already gone here), so the pin is a
 # preserved value rather than an upgrade decision.
-pytest-rhiza = "pytest-rhiza==0.2.1"
+#
+# Raised 0.2.1 -> 0.6.0 when [project].version became dynamic. Every release up to and
+# including 0.5.0 reads `project["version"]` unconditionally, so a derived version fails
+# test_version_follows_semver (empty string against the semver regex) and the git-tag
+# comparison (InvalidVersion on ""). 0.6.0 is the first release that asks whether the
+# version is dynamic and skips those two assertions; there is no older version to pin.
+pytest-rhiza = "pytest-rhiza==0.6.0"
 
 # Not set, on purpose -- each of these was in the make layer but matches the 0.3.1 default,
 # and naming a setting *replaces* the default rather than adding to it, so restating one is
@@ -139,6 +159,12 @@ plotly = "plotly"
 pytest = "pytest"
 
 [tool.bumpversion]
+# No current_version and no [[tool.bumpversion.files]] entry: there is no longer a
+# version written anywhere to rewrite. [project].version is dynamic (see
+# [tool.hatch.version]), so the tag alone decides what gets built and a release is a
+# tag, not an edit. The table stays because bump-my-version still has to *discover* a
+# config -- from a path it never reads it falls back to `git describe` -- and because
+# the settings below still bind if it is run.
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(?:[-]?(?P<release>[a-z]+)[\\.]?(?P<pre_n>\\d+))?(?:\\+build\\.(?P<build_n>\\d+))?"
 serialize = ["{major}.{minor}.{patch}-{release}.{pre_n}+build.{build_n}", "{major}.{minor}.{patch}+build.{build_n}", "{major}.{minor}.{patch}-{release}.{pre_n}", "{major}.{minor}.{patch}"]
 search = "{current_version}"
@@ -170,8 +196,3 @@ values = [
 # Anchored to the [project] table on purpose. `search`/`replace` are applied to
 # EVERY occurrence in the file, so the obvious `version = "{current_version}"`
 # also rewrites any [tool.*] table that happens to share the current number.
-[[tool.bumpversion.files]]
-filename = "pyproject.toml"
-regex = true
-search = '(?ms)^\[project\]((?:(?!^\[)[\s\S])*?)^version = "{current_version}"'
-replace = '[project]\1version = "{new_version}"'
