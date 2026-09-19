@@ -157,6 +157,7 @@ matplotlib = "matplotlib"
 pandas = "pandas"
 plotly = "plotly"
 pytest = "pytest"
+hypothesis = "hypothesis"
 
 [tool.bumpversion]
 # No current_version and no [[tool.bumpversion.files]] entry: there is no longer a
